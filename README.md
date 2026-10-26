@@ -245,7 +245,7 @@ server on port 8001 with `data/e2e.sqlite3` and exercise the real compiled React
 API, LangGraph, persistence and reload. Browser downloads need internet.
 Do not run against a live-mode server; the test config starts its own.
 
-Current baseline: **57 backend tests and two browser tests**. Add tests for new
+Current baseline: **99 backend tests and two browser tests**. Add tests for new
 features; the count will increase. Port 8001 must be free. Browser tests always
 start their own fixture backend, even if your development `.env` says live.
 They use the compiled React build, not the Vite development server.
@@ -279,18 +279,24 @@ Existing `team-setup/` files are untouched historical planning material.
 | `backend/capture.py` | Evidence validation and normalization |
 | `backend/models.py` | Shared Stage 1 domain models |
 | `backend/interfaces.py` | Inventory service outline, not a stock implementation |
+| `backend/retail_data.py` | Shared products/sales tables, prototype data and loaders |
+| `backend/profit_margin.py` | UC-M3-02 profit margin calculation |
 | `frontend/src/main.tsx` | Request entry and saved-record UI |
 | `tests/` | Backend/schema tests |
 | `frontend/e2e/` | Browser tests |
 | `docs/stage1-alignment.md` | Report-to-code mappings and gaps |
+| `docs/uc-m3-02-profit-margin.md` | UC-M3-02 decisions, shared data tables and acceptance |
 | `VERIFICATION.md` | Verification evidence and limitations |
 | `AGENTS.md` | Standing project instructions |
 
 **Implemented:** UC-M1-01 main flow and documented extension paths.
 See [its acceptance matrix](docs/uc-m1-01-acceptance.md) for evidence and limits.
-**Not implemented:** UC-M1-02 stock lookup or the other eight use cases.
-Inventory/sales schemas exist, but their tables, repositories and agent behaviour
-do not. The app has no authentication, checkout, payment or public-hosting setup.
+**Partially implemented:** UC-M3-02 profit margin calculation over the shared
+sales data, without an API route or UI yet; see [its reference](docs/uc-m3-02-profit-margin.md).
+**Not implemented:** UC-M1-02 stock lookup or the remaining seven use cases.
+Shared `products` and `sales` tables with prototype data exist; inventory tables,
+repositories and agent behaviour do not. The app has no authentication, checkout,
+payment or public-hosting setup.
 
 ### Always read Stage 1 first
 

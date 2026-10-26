@@ -16,14 +16,19 @@ Sequence Fixed submission; section and figure numbers are used here.
 supplies loaders for authorised sales rows and the product catalogue; nothing is
 written and no downstream action is triggered. It makes no model call.
 
-Not yet wired: no API route, UI, or sales/product tables. Those depend on the
-shared decisions listed at the end.
+Data comes from the shared `products` and `sales` SQLite tables in
+`backend/retail_data.py` via `load_sales(db)` and `load_products(db)`. The tables
+are created at startup and seeded with prototype data only when both are empty.
+The seed includes one September sale without cost, so a Wine/September analysis
+demonstrates the 3a partial result.
+
+Not yet wired: no API route or UI. Those depend on the shared decisions listed at the end.
 
 ## Implementation decisions (Member 3)
 
 | Topic | Decision | Basis |
 | --- | --- | --- |
-| Cost semantics | `selling_price` and `cost` are **per unit**; totals multiply by `quantity` | Figure 5: quantity 2 with sellingPrice 67.00 against catalogue price 65.00 only reads as per-unit; cost 52.00 read the same way. **Team to confirm** (shared field). |
+| Cost semantics | `selling_price` and `cost` are **per unit**; totals multiply by `quantity`. Adopted for the prototype tables and seed data; the team may revisit. | Figure 5: quantity 2 with sellingPrice 67.00 against catalogue price 65.00 only reads as per-unit; cost 52.00 read the same way. |
 | Margin formula | `profit / revenue × 100` (gross margin), rounded half-up to 2 dp | Not defined in §6.3.2; every result states it in `calculation_basis` (§11 explainability) |
 | Zero revenue | Margin is null with a stated limitation | No fabricated value (§6.3.2 exceptions) |
 | Arithmetic | `Decimal` throughout; money sums are not rounded | §11: figures must exactly match expected values |
@@ -58,12 +63,26 @@ and `partial` carry financial values.
 | No automatic action | Inputs are only read | `test_analysis_is_read_only` |
 | §6.3.2 10-second target | Not yet measured; in-memory arithmetic only | — |
 
+## Shared data tables
+
+`backend/retail_data.py` now provides the shared `products` and `sales` tables (§4)
+for every feature that reads the catalogue or completed sales, e.g. Drink
+Recommendation, Budget Filtering, Restocking Decision Support and Demand Trend
+Detection. Reuse them rather than creating parallel tables.
+
+- Columns follow `Product` and `SalesRecord` in `backend/models.py`, plus a
+  `sale_id` key. `flavour_tags` is a JSON list.
+- Money is decimal text, never REAL; `selling_price` and `cost` are per unit.
+- `sales.cost` is nullable so missing cost data (3a) can be represented.
+- Prototype data: 6 products (Wine, Beer, Spirits) and 16 sales from August to
+  October 2026, including the Figure 5 example sale.
+- Inventory tables are not included; they belong with Inventory Lookup (M1-AR-02).
+
 ## Needs team agreement
 
-1. Confirm `SalesRecord.cost` (and `selling_price`) are per-unit values.
-2. Shared `products` and `sales` tables with prototype data (§4): who creates them.
-   Store money as decimal text, not SQLite REAL, and allow a null `cost` so 3a can occur.
-3. Authorisation/role context for founder-only analyses, consistent with the
+1. Per-unit `selling_price`/`cost` is adopted for now; raise it if a feature needs
+   a different meaning before others build on it.
+2. Authorisation/role context for founder-only analyses, consistent with the
    pending `InventoryQueryService` update and the code-selected identity pattern in
    `backend/handoff.py`.
-4. API route and UI: requires agreed changes to the shared `main.py` and `main.tsx`.
+3. API route and UI: requires agreed changes to the shared `main.py` and `main.tsx`.
