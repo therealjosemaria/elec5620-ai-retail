@@ -245,7 +245,7 @@ server on port 8001 with `data/e2e.sqlite3` and exercise the real compiled React
 API, LangGraph, persistence and reload. Browser downloads need internet.
 Do not run against a live-mode server; the test config starts its own.
 
-Current baseline: **99 backend tests and two browser tests**. Add tests for new
+Current baseline: **100 backend tests and two browser tests**. Add tests for new
 features; the count will increase. Port 8001 must be free. Browser tests always
 start their own fixture backend, even if your development `.env` says live.
 They use the compiled React build, not the Vite development server.

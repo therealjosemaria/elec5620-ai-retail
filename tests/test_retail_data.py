@@ -1,8 +1,9 @@
 """Shared products/sales tables and prototype data (report §4, Figure 4, Figure 5)."""
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 import json
 import sqlite3
+import time
 
 from fastapi.testclient import TestClient
 import pytest
@@ -103,6 +104,23 @@ def test_profit_margin_over_prototype_data(db, scope, outcome, figures, missing_
     assert (result.revenue, result.total_cost, result.profit,
             result.profit_margin_percent) == tuple(map(Decimal, figures))
     assert result.excluded_missing_cost == missing_cost
+
+
+def test_standard_analysis_within_ten_seconds(db):
+    """§6.3.2 target: SQLite load plus calculation over ~10,000 sales rows."""
+    db.executemany(
+        "INSERT INTO sales (sale_date, product_id, quantity, selling_price, cost) VALUES (?, ?, ?, ?, ?)",
+        [((date(2026, 1, 1) + timedelta(days=i % 290)).isoformat(), PROTOTYPE_PRODUCTS[i % 6][0],
+          1 + i % 5, PROTOTYPE_PRODUCTS[i % 6][3], "10.00") for i in range(10_000)])
+    scope = ProfitMarginScope(category="Wine", start_date=date(2026, 1, 1), end_date=date(2026, 10, 25))
+    started = time.perf_counter()
+    result = analyse_profit_margin(scope, lambda: load_sales(db), lambda: load_products(db),
+                                   today=date(2026, 10, 26))
+    elapsed = time.perf_counter() - started
+    in_scope = db.execute("SELECT count(*) FROM sales JOIN products USING (product_id) WHERE category = 'Wine' "
+                          "AND sale_date BETWEEN '2026-01-01' AND '2026-10-25'").fetchone()[0]
+    assert result.record_count + result.excluded_missing_cost == in_scope > 6000
+    assert elapsed < 10, f"{elapsed:.2f}s"
 
 
 def test_flavour_tags_stored_as_json_list(db):
