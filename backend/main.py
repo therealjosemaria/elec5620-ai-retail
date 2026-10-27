@@ -1,4 +1,4 @@
-"""UC-M1-01 only: extract, validate and persist explicitly stated needs."""
+"""Shared API: request capture plus Member 2 recommendations and restocking."""
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -11,7 +11,7 @@ from typing import TypedDict
 from uuid import UUID
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from langgraph.graph import END, START, StateGraph
@@ -19,8 +19,11 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 from openai import LengthFinishReasonError
 from backend.capture import CapturedEvidence, normalize
 from backend.models import CustomerRequest, RequestStatus
-from backend.handoff import RequestPublisher
-from backend.retail_data import ensure_retail_data
+from backend.handoff import RequestPublisher, RequestConsumer, read_published_request
+from backend.retail_data import ensure_retail_data, load_products
+from backend.recommendations import RecommendationResult, recommend_drinks
+from backend.restocking import RestockingResult, RestockingScope, analyse_restocking
+from backend.member2_demo import demo_restocking
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
@@ -128,7 +131,8 @@ def live_extract(text):
 
 
 def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
-               publisher: RequestPublisher | None = None):
+               publisher: RequestPublisher | None = None, *,
+               restocking_authorise=None, inventory_service=None, restocking_sales_loader=None):
     selected_mode = mode or os.getenv("MODEL_MODE", "fixture")
     if selected_mode not in ("fixture", "live"):
         raise ValueError("MODEL_MODE must be fixture or live.")
@@ -207,6 +211,39 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
     def get_request(request_id: UUID):
         with connect() as db:
             return read_record(db, str(request_id))
+
+    @app.get("/api/requests/{request_id}/recommendations", response_model=RecommendationResult)
+    def recommendations(request_id: UUID):
+        with connect() as db:
+            # Confirm existence first; do not bypass the durable downstream handoff.
+            read_record(db, str(request_id))
+            try:
+                needs = read_published_request(db, str(request_id), RequestConsumer.RECOMMENDATION)
+            except LookupError:
+                raise HTTPException(409, "Request has not been published to the recommendation inbox.")
+            return recommend_drinks(needs, lambda: load_products(db))
+
+    @app.post("/api/restocking-priorities", response_model=RestockingResult)
+    def restocking(scope: RestockingScope, request: Request):
+        # Integration callback must authenticate the request and authorise this scope.
+        # No browser-supplied boolean or role can enable access. Denied by default.
+        try:
+            allowed = restocking_authorise is not None and restocking_authorise(request, scope) is True
+        except Exception:
+            allowed = False
+        if not allowed:
+            raise HTTPException(403, "Operator authorisation is required; no analysis performed.")
+        if inventory_service is None or restocking_sales_loader is None:
+            raise HTTPException(503, "Authorised inventory and sales snapshot services are not connected.")
+        with connect() as db:
+            return analyse_restocking(scope, authorise=lambda _: True, load_catalogue=lambda: load_products(db),
+                                      inventory=inventory_service, load_sales=restocking_sales_loader)
+
+    @app.post("/api/demo/restocking-priorities", response_model=RestockingResult)
+    def restocking_demo(scope: RestockingScope):
+        if selected_mode != "fixture":
+            raise HTTPException(403, "Fixed restocking demonstration is available only in fixture mode.")
+        return demo_restocking(scope)
 
     @app.post("/api/requests", status_code=201, response_model=SavedRequest)
     def capture(submission: Submission):

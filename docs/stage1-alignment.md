@@ -78,3 +78,8 @@ complete integration contract or an implemented stock lookup**.
 
 No recommendation, budget filtering, clarification or inventory behaviour was
 added to UC-M1-01. No additional live model calls were needed for this alignment.
+
+## Member 2 prototype
+
+See [Member 2 implementation](member2-implementation.md) for submitted report
+sections, diagrams, implementation choices and integration limitations.

@@ -22,3 +22,8 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .8rem; }
 summary { cursor: pointer; margin-top: 20px; }
 :focus-visible { outline: 3px solid #bc7618; outline-offset: 3px; }
 @media (max-width: 500px) { dl > div { grid-template-columns: 1fr; } main { margin-top: 24px; } }
+
+.product-card { border-top: 1px solid #cddbd5; padding: 16px 0; overflow-wrap: anywhere; }
+.product-card h3 { margin: 0 0 8px; }
+.inline-form { border: 0; padding: 0; }
+select { font: inherit; padding: 10px; max-width: 100%; margin: 0 12px 12px 0; }

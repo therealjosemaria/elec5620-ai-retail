@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
+import { DrinkRecommendations, RestockingDemo } from "./Member2";
 
 type Status = {
   mode: "fixture" | "live"; live_attempts_today: number; local_daily_limit: number;
@@ -93,6 +94,8 @@ function App() {
       <small>Request ID: {saved.request_id}<br />Saved: {saved.created_at}</small>
       <details><summary>Inspect stored record</summary><pre>{JSON.stringify(saved, null, 2)}</pre></details>
     </section>}
+    {saved && <DrinkRecommendations key={saved.request_id} requestId={saved.request_id} />}
+    {status?.mode === "fixture" && <RestockingDemo />}
   </main>;
 }
 createRoot(document.getElementById("root")!).render(<App />);

@@ -293,7 +293,8 @@ Existing `team-setup/` files are untouched historical planning material.
 See [its acceptance matrix](docs/uc-m1-01-acceptance.md) for evidence and limits.
 **Partially implemented:** UC-M3-02 profit margin calculation over the shared
 sales data, without an API route or UI yet; see [its reference](docs/uc-m3-02-profit-margin.md).
-**Not implemented:** UC-M1-02 stock lookup or the remaining seven use cases.
+**Prototype:** Member 2 recommendation and restocking features; see the implementation document.
+**Not implemented:** UC-M1-02 stock lookup and the other remaining use cases.
 Shared `products` and `sales` tables with prototype data exist; inventory tables,
 repositories and agent behaviour do not. The app has no authentication, checkout,
 payment or public-hosting setup.
@@ -452,3 +453,10 @@ Never post `.env`, authentication headers, keys or credential screenshots.
 - Linux ARM64 is the tested platform. Mac/Windows-WSL teammate onboarding remains unverified.
 - This is not an offline dependency bundle. Locked stable releases reduce variation,
   but no README can guarantee zero errors on every computer.
+
+## Member 2 prototype
+
+UC-M2-01 adds catalogue recommendations after saving a customer request.
+UC-M2-02 adds authorised restocking analysis with an isolated fixture demonstration.
+General natural-language recommendation and real inventory/authentication integration
+remain pending. See [implementation and verification](docs/member2-implementation.md).
