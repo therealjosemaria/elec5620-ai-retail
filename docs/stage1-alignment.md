@@ -57,6 +57,8 @@ No model calls are made when reading or upgrading the representation.
 
 IDs represent the associations shown in Figure 4 and §4. These schemas do not
 create tables, foreign keys, agent implementations, or the other members' features.
+Product and SalesRecord now have shared SQLite tables in `backend/retail_data.py`
+(see `docs/uc-m3-02-profit-margin.md`); Inventory and InventoryItem still have none.
 
 ## Inventory interface: agreed interpretation, implementation pending
 

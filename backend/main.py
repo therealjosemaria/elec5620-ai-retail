@@ -20,6 +20,7 @@ from openai import LengthFinishReasonError
 from backend.capture import CapturedEvidence, normalize
 from backend.models import CustomerRequest, RequestStatus
 from backend.handoff import RequestPublisher
+from backend.retail_data import ensure_retail_data
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
@@ -163,6 +164,7 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
             columns = {row[1] for row in db.execute("PRAGMA table_info(customer_requests)")}
             if "request_status" not in columns:
                 db.execute("ALTER TABLE customer_requests ADD COLUMN request_status TEXT NOT NULL DEFAULT 'RequestAvailable'")
+            ensure_retail_data(db)
         yield
 
     app = FastAPI(title="ELEC5620 — User Need Input", lifespan=lifespan)
