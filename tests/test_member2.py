@@ -221,6 +221,16 @@ def test_live_mode_does_not_enable_fixture_or_operator_access(tmp_path):
         assert client.post("/api/restocking-priorities", json={}).status_code == 403
 
 
+def test_catalogue_api_preserves_catalogue_facts_without_inventory(tmp_path):
+    with TestClient(create_app(tmp_path / "db", "fixture")) as client:
+        response = client.get("/api/products")
+        assert response.status_code == 200
+        rows = response.json()
+        assert len(rows) == 6
+        vodka = next(p for p in rows if p["product_id"] == "product-006")
+        assert vodka["name"] == "Premium Vodka 700ml" and vodka["price"] == "65.00"
+        assert all(set(row) == set(Product.model_fields) for row in rows)
+
 
 def test_authorised_api_requires_real_services(tmp_path):
     with TestClient(create_app(tmp_path / "db", "fixture", restocking_authorise=lambda *_: True)) as client:

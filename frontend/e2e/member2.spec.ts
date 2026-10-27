@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("Member 2 catalogue recommendations preserve over-budget candidates and explain matches", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/#assistant");
   await page.getByRole("button", {name: "Use sample", exact: true}).click();
   await page.getByRole("button", {name: "Capture and save"}).click();
   await page.getByRole("button", {name: "Recommend drinks"}).click();
@@ -19,7 +19,7 @@ test("Member 2 catalogue recommendations preserve over-budget candidates and exp
 
 test("Member 2 restocking demo explains tied evidence, handles no priority, and fits mobile", async ({ page }) => {
   await page.setViewportSize({width: 390, height: 844});
-  await page.goto("/");
+  await page.goto("/#insights");
   await page.getByRole("button", {name: "Review sample priorities"}).click();
   const section = page.getByRole("region", {name: "Restocking demonstration"});
   await expect(section.getByRole("status")).toHaveText("Restocking result: presented");

@@ -4,6 +4,14 @@ Source: submitted `AI_Multi_Agent_Alcohol_Retail_Project_M5_Sequence_Fixed.docx.
 not the Critical Fixes revision. Checked §4, §6.1.1, §10.1, Figure 4 (p35),
 Figure 5 (p36), Figure 7 (p38), and Figure 18 (p49).
 
+Member 2 update (27 October 2026): the user confirmed the local
+`AIMultiAgentAlcoholRetail_Project-1.pdf` is the submitted report under a different
+filename. Its pagination differs from the references above; Member 2 decisions
+use section/figure identifiers. See [Member 2 implementation](member2-implementation.md)
+for UC-M2-01 and UC-M2-02, inspected diagrams, prototype decisions and integration limits.
+The [unified interface](unified-interface.md) maps all ten core use cases to the
+three agent workspaces from Figures 3 and 7, with explicit integration placeholders.
+
 ## Corrections to the first slice
 
 | Submitted model | Python contract | Correction |
@@ -33,7 +41,8 @@ New valid requests are preserved as `RequestAvailable`, then become
 `RequestConfirmed` after durable inbox handoff or `DownstreamUnavailable` if the
 configured publisher fails. Unusable all-unknown results are explicit incomplete
 records and are not published. Legacy records remain `RequestAvailable`.
-Downstream business features themselves remain for later work.
+Member 2 now consumes the inbox for a deterministic recommendation prototype;
+the capture use case itself still performs no recommendation.
 
 ## Persistence and API
 
@@ -78,8 +87,3 @@ complete integration contract or an implemented stock lookup**.
 
 No recommendation, budget filtering, clarification or inventory behaviour was
 added to UC-M1-01. No additional live model calls were needed for this alignment.
-
-## Member 2 prototype
-
-See [Member 2 implementation](member2-implementation.md) for submitted report
-sections, diagrams, implementation choices and integration limitations.

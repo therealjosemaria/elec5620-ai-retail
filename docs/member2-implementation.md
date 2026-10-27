@@ -108,7 +108,9 @@ procurement approval is performed.
 
 ## Demo
 
-Start using the README's fixture setup. Save **Use sample**, then click **Recommend drinks**. Below it, choose a sample category and click **Review sample priorities**. Wine produces two tied priorities; Beer produces
+Start using the README's fixture setup. Open **Customer assistant**, save
+**Use sample**, then click **Recommend drinks**. Open **Business insights**,
+choose a sample category and click **Review sample priorities**. Wine produces two tied priorities; Beer produces
 an explicit no-priority result.
 
 `POST /api/demo/restocking-priorities` uses only isolated fixed fixtures from

@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test("React → FastAPI → LangGraph fixture → SQLite → React, including reload", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
-  await page.goto("/");
+  await page.goto("/#assistant");
   await expect(page.getByText("Fixture mode · no AI calls")).toBeVisible();
   await page.getByRole("button", { name: "Use sample" }).click();
   await page.getByRole("button", { name: "Capture and save" }).click();
@@ -22,7 +22,7 @@ test("React → FastAPI → LangGraph fixture → SQLite → React, including re
 });
 
 test("fixture errors are visible and do not create a record", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/#assistant");
   await page.getByLabel("What are you looking for?").fill("Not the fixture");
   await page.getByRole("button", { name: "Capture and save" }).click();
   await expect(page.getByRole("alert")).toContainText("Fixture mode accepts only");

@@ -18,7 +18,7 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from openai import LengthFinishReasonError
 from backend.capture import CapturedEvidence, normalize
-from backend.models import CustomerRequest, RequestStatus
+from backend.models import CustomerRequest, Product, RequestStatus
 from backend.handoff import RequestPublisher, RequestConsumer, read_published_request
 from backend.retail_data import ensure_retail_data, load_products
 from backend.recommendations import RecommendationResult, recommend_drinks
@@ -206,6 +206,12 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
                 "live_attempts_today": used, "local_daily_limit": limit,
                 "live_configured": bool(os.getenv("ELEC5620_API_KEY")),
                 "sample": SAMPLE}
+
+    @app.get("/api/products", response_model=list[Product])
+    def catalogue():
+        # Catalogue facts only. Stock remains behind InventoryQueryService.
+        with connect() as db:
+            return load_products(db)
 
     @app.get("/api/requests/{request_id}", response_model=SavedRequest)
     def get_request(request_id: UUID):
