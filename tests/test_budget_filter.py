@@ -40,6 +40,7 @@ def test_retains_products_within_budget():
     ]
     assert result.excluded_product_ids == ["WINE-002"]
     assert result.status == BudgetFilterStatus.MATCHED
+    assert result.budget == Decimal("30.00")
 
 
 def test_product_equal_to_budget_is_retained():

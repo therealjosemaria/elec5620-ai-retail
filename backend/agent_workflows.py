@@ -10,6 +10,8 @@ from backend.availability import ProductAvailabilityResult
 from backend.budget_filter import BudgetFilterError, BudgetFilterResult
 from backend.models import CustomerRequest, DomainModel, Product
 from backend.profit_margin import ProfitMarginResult
+from backend.replenishment import InventoryDecisionResult
+from backend.demand import DemandResult
 from backend.recommendation_store import RecommendationError, SavedRecommendations
 from backend.restocking import (RestockingOutcome, RestockingResult, RestockingScope,
                                 analyse_restocking)
@@ -35,6 +37,8 @@ class WorkflowReport(DomainModel):
     availability: list[ProductAvailabilityResult] = Field(default_factory=list)
     restocking: RestockingResult | None = None
     profit: ProfitMarginResult | None = None
+    inventory_decision: InventoryDecisionResult | None = None
+    demand: DemandResult | None = None
     limitations: list[str] = Field(default_factory=list)
 
 
@@ -44,6 +48,16 @@ class TracedProfitResult(ProfitMarginResult):
 
 
 class TracedRestockingResult(RestockingResult):
+    workflow_id: UUID
+    trace: list[AgentEvent]
+
+
+class TracedInventoryResult(InventoryDecisionResult):
+    workflow_id: UUID
+    trace: list[AgentEvent]
+
+
+class TracedDemandResult(DemandResult):
     workflow_id: UUID
     trace: list[AgentEvent]
 
@@ -156,6 +170,20 @@ class _InventoryEvidence:
 
 
 class BusinessInsightsAgent:
+    def demand(self, analyse):
+        def node(state):
+            report = state["report"].model_copy(deep=True)
+            event(report, "operator", "business_insights_agent", "detect_demand_trends", "requested")
+            report.demand = analyse()
+            report.outcome = report.demand.outcome
+            event(report, "business_insights_agent", "operator", "present_demand_trends", report.outcome)
+            return {"report": report}
+        graph = StateGraph(BusinessState)
+        graph.add_node("business_demand", node)
+        graph.add_edge(START, "business_demand")
+        graph.add_edge("business_demand", END)
+        return graph.compile().invoke({"report": WorkflowReport(kind="demand")})["report"]
+
     def restock(self, scope: RestockingScope, *, inventory, load_catalogue, load_sales, now):
         def scope_node(state):
             report = state["report"].model_copy(deep=True)
@@ -222,3 +250,33 @@ class BusinessInsightsAgent:
         graph.add_edge(START, "business_profit")
         graph.add_edge("business_profit", END)
         return graph.compile().invoke({"report": WorkflowReport(kind="profit")})["report"]
+
+
+class InventoryState(TypedDict, total=False):
+    report: WorkflowReport
+    evidence: list
+
+
+def inventory_workflow(*, agent, lookup_request, reorder=False):
+    """Figure 15/17: Inventory Agent retrieves evidence then makes its own decision."""
+    kind = "reorder" if reorder else "low_stock"
+    def lookup(state):
+        report = state["report"].model_copy(deep=True)
+        event(report, "operator", "inventory_procurement_agent", "review_" + kind, "requested", lookup_request.product_ids)
+        event(report, "inventory_procurement_agent", "inventory_query_service", "lookup_stock", "requested", lookup_request.product_ids)
+        evidence = agent.lookup_stock(lookup_request)
+        event(report, "inventory_query_service", "inventory_procurement_agent", "lookup_stock", "returned", lookup_request.product_ids)
+        return {"report": report, "evidence": evidence}
+    def decide(state):
+        report = state["report"].model_copy(deep=True)
+        report.inventory_decision = agent.evaluate_replenishment(state["evidence"], reorder=reorder)
+        report.outcome = report.inventory_decision.outcome
+        event(report, "inventory_procurement_agent", "operator", "present_" + kind, report.outcome, lookup_request.product_ids)
+        return {"report": report}
+    graph = StateGraph(InventoryState)
+    graph.add_node("inventory_lookup", lookup)
+    graph.add_node("inventory_decision", decide)
+    graph.add_edge(START, "inventory_lookup")
+    graph.add_edge("inventory_lookup", "inventory_decision")
+    graph.add_edge("inventory_decision", END)
+    return graph.compile().invoke({"report": WorkflowReport(kind=kind)})["report"]

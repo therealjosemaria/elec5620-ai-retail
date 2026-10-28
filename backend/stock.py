@@ -107,6 +107,10 @@ class InventoryProcurementAgent:
             raise InventorySourceUnavailableError("Inventory source unavailable.")
         return [classify_lookup(result, now=self.clock()) for result in results]
 
+    def evaluate_replenishment(self, records, *, reorder=False, rule_available=True):
+        from backend.replenishment import evaluate_inventory
+        return evaluate_inventory(records, reorder=reorder, rule_available=rule_available, now=self.clock())
+
     def lookup_stock(self, request: InventoryLookupRequest | str):
         """Single-ID compatibility raises on unresolved evidence; batch returns statuses."""
         single = isinstance(request, str)

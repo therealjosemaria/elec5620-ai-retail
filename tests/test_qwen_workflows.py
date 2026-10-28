@@ -331,3 +331,16 @@ def test_offline_revalidation_rejects_missing_output_and_changed_needs(system, m
     with pytest.raises(storage.RecommendationError, match="needs changed"):
         store.revalidate(rid)
     assert len(calls) == 1
+
+
+def test_occasion_and_party_without_catalogue_metadata_never_invent_suitability(system):
+    _, path, _ = system
+    with sqlite3.connect(path) as db:
+        products = load_products(db)
+    needs = CustomerRequest(occasion="wedding",party_size=12)
+    result = validate_choices(json.dumps({"recommendations":[],"unresolved_needs":["wedding","12"]}),needs,products)
+    assert result.outcome=="no_match" and not result.recommendations
+    assert any("no occasion or party-size" in line for line in result.limitations)
+    invented={"recommendations":[{"product_id":"product-001","rank":1,"matches":[{"need_field":"occasion","need_value":"wedding","catalogue_field":"category","catalogue_value":"Wine"}]}],"unresolved_needs":[]}
+    with pytest.raises(ValueError):
+        validate_choices(json.dumps(invented),needs,products)

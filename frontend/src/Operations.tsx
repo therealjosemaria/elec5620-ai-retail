@@ -3,6 +3,7 @@ import { RestockingDemo } from "./Member2";
 import type { Product } from "./Catalogue";
 import { StockLookup } from "./StockLookup";
 import { OperatorAnalysis } from "./OperatorAnalysis";
+import { InventoryDecisions, DemandTrends } from "./RemainingTools";
 
 const inventoryFeatures = [
   {title: "Stock lookup", member: "M1", id: "UC-M1-02", description: "Current stock quantities and source update times for selected products.", dependency: "The inventory query service is not connected."},
@@ -22,13 +23,13 @@ export function InventoryWorkspace({ products, error }: { products: Product[]; e
   return <div className="operations-workspace">
     <header className="page-heading"><p className="eyebrow">02 / INVENTORY & PROCUREMENT AGENT</p>
       <h1>A clearer view.<br/><em>Of every bottle.</em></h1><p>Review stock, spot shortages and plan replenishment from verified inventory evidence.</p></header>
-    <div className="workspace-notice">Stock lookup and availability are connected. Operator authorisation is required. Alerts and reorder suggestions are not implemented.</div>
+    <div className="workspace-notice">Stock, availability, low-stock alerts and reorder suggestions use the shared inventory service. Operator authorisation is required.</div>
     <div className="workspace-tabs" role="tablist" aria-label="Inventory tools">{inventoryFeatures.map((f, i) =>
       <button key={f.id} role="tab" id={`inv-tab-${i}`} aria-controls="inventory-panel" aria-selected={tab === i} onClick={() => setTab(i)}>{f.title}<small>{f.member}</small></button>)}</div>
     <section id="inventory-panel" role="tabpanel" aria-labelledby={`inv-tab-${tab}`}>
-      <div className="tool-heading"><p className="eyebrow">{feature.id}</p><span className="badge pending">{tab === 0 || tab === 2 ? "Operator access" : "Not implemented"}</span></div>
+      <div className="tool-heading"><p className="eyebrow">{feature.id}</p><span className="badge pending">Operator access</span></div>
       {tab === 0 || tab === 2 ? <StockLookup key={tab} products={products} error={error} availability={tab === 2}/> :
-        <PendingFeature title={feature.title} description={feature.description} detail={feature.dependency}/>}
+        <InventoryDecisions key={tab} kind={tab===1?"alerts":"reorder"} products={products}/>}
     </section>
   </div>;
 }
@@ -44,7 +45,7 @@ export function InsightsWorkspace({ mode, products }: { mode: string | null; pro
     <section id="insights-panel" role="tabpanel" aria-labelledby={`insight-tab-${tab}`}>
       {tab === 0 && <><OperatorAnalysis key="restocking" kind="restocking" products={products}/>{mode === "fixture" && <RestockingDemo/>}</>}
       {tab === 1 && <OperatorAnalysis key="profit" kind="profit" products={products}/>}
-      {tab === 2 && <><p className="eyebrow tool-heading">UC-M5-02 / MEMBER 5</p><PendingFeature title="Demand trends" description="Compare completed sales periods to understand increasing, decreasing or stable demand." detail="The analysis service and comparison rule have not been connected. No sales trend is inferred."/></>}
+      {tab === 2 && <DemandTrends products={products}/>}
     </section>
   </div>;
 }

@@ -367,3 +367,44 @@ pending UI deletion. Board 2 is team-managed and reports that it does not suppor
 sprints. Its space admin must enable Sprints/Reports in the Jira UI; this toggle
 also has no connected operation. KAN-17 records the remaining setup steps. No
 sprint or burndown completion is claimed.
+
+## Remaining core completion — 28 October 2026
+
+Merged Avan's newer contract/API branch into the completion branch, preserving
+both author commits. Resolved the shared-main conflict by keeping the integrated
+application. Decimal budget results and explicit Stale availability evidence are
+retained; InventoryQueryService remains the freshness authority. Member 4 HTTP
+aliases now use saved request IDs or operator-authorised source product IDs;
+browser-supplied prices, stock snapshots and roles cannot establish authority.
+
+Implemented UC-M3-01 low-stock alerts, UC-M5-01 reorder suggestions and UC-M5-02
+demand trends, their authenticated React forms and persisted LangGraph reports.
+The owner approved reorder target = twice threshold and adjacent equal-duration
+completed-period demand comparison with positive/negative/zero units-change
+classification. Source diagrams and exact decisions are in
+`docs/remaining-core-acceptance.md`. The recommendation acceptance review adds an
+occasion-only no-match check and rejects invented occasion evidence. Absent
+suitability/serving metadata remains an explicit data limitation.
+
+**262 backend tests passed**, including inherited contributor tests and additional
+rule, source, authorization, trace, read-only storage and no-fabrication cases.
+**12 fixture browser tests passed**, including all three new forms, wrong-token
+denial, real source quantities, reorder 17, stale-evidence withholding, historical
+demand and mobile layout. Production TypeScript/Vite build passed. No new model
+calls were made by these checks.
+
+The actual port-8004 preview passed browser checks against its retained SQLite
+prototype source: low-stock alert workflow `4bf3229c-e54d-44cf-b552-7af66e4eac68`,
+reorder `dfa14f7a-fbbb-4639-a620-164ffa97db8b` and demand
+`46794f15-73e2-4998-8a5f-fd66759149b5`. Stock 3/threshold 10 produced suggestion
+17; Shiraz September quantities 4 versus prior equal-period 2 classified increasing.
+All added **zero model calls**. The saved actual university recommendation request
+`1cca1bbd-aa78-40ff-9c64-9bab0b5ef659` passed cache-only customer graph/readback/
+reload again with workflow `ce16a121-b5bc-43c1-bf6e-8ef67f02359d`, adding zero calls.
+This is reuse of earlier real Qwen output, not fresh inference on this revision.
+
+All ten core functions now have connected implementations. Formal team acceptance,
+current clean Canvas-package deployment rehearsal, contribution statements and
+genuine Agile meeting/sprint evidence are still required. Original report owners
+retain ownership; the gap implementation here is Jose's authorized assistant work,
+not newly claimed authorship by Cedar, Lio, Avan or Lira.
