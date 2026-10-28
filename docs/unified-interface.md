@@ -26,15 +26,14 @@ and browser history. Navigation between operator previews is not authentication.
 | Route | Agent / purpose | Use cases |
 | --- | --- | --- |
 | `/#discover` | Catalogue landing page, search, category filters and product details | Read-only catalogue browsing supporting customer assistance |
-| `/#assistant` | CustomerAgent | M1-01 capture; M2-01 rule recommendation; M4-01 budget filter placeholder; availability integration placeholder |
-| `/#inventory` | InventoryProcurementAgent | M1-02 stock lookup; M3-01 alerts; M4-02 availability; M5-01 reorder suggestion placeholders |
-| `/#insights` | BusinessInsightsAgent | M2-02 existing fixture demo; M3-02 profit margin integration placeholder; M5-02 demand trend placeholder |
+| `/#assistant` | CustomerAgent | M1-01 capture; M2-01 Qwen recommendations; M4-01 budget; availability handoff and saved communication trace |
+| `/#inventory` | InventoryProcurementAgent | Connected M1-02 stock, M3-01 alerts, M4-02 availability and M5-01 reorder |
+| `/#insights` | BusinessInsightsAgent | Connected M2-02 restocking, M3-02 profit margins and M5-02 demand trends |
 
-No new inventory, budget filtering, profit-margin API, trend analysis or reorder
-business logic is claimed. Inventory entries show `Unknown` / `Not connected`;
-there are no fabricated stock quantities, dashboard totals or trends. M3 profit
-calculation remains an existing backend module awaiting an authenticated API.
-Optional features, checkout and supplier ordering remain outside this work.
+The original Cedar UI has now been connected to the shared services and all ten
+core use cases. Unknown/stale evidence remains explicit; no quantities or trends
+are invented. Operator tools require the private token. Optional features,
+checkout and supplier ordering remain outside the implementation.
 
 `GET /api/products` returns the existing `Product` schema through the shared
 catalogue loader, with exact decimal strings and no inventory fields. Prices are

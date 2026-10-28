@@ -29,8 +29,8 @@ original contribution.
 
 The unified [three-agent interface](docs/unified-interface.md) now opens on a
 catalogue landing page. Use **Customer assistant**, **Inventory & procurement**
-and **Business insights** in the navigation. Pending features are labelled;
-the interface does not imply all ten backend use cases are implemented.
+and **Business insights** in the navigation. All ten core use cases now have
+connected implementations; prototype data and AI limitations remain explicit.
 
 For stock lookup, set a private `OPERATOR_TOKEN` in `.env`, restart FastAPI,
 open **Inventory & procurement**, select products and enter that token.
@@ -331,10 +331,12 @@ Existing `team-setup/` files are untouched historical planning material.
 | `VERIFICATION.md` | Verification evidence and limitations |
 | `AGENTS.md` | Standing project instructions |
 
-**Connected:** request capture, stock lookup, limited rule-based recommendations,
-restocking priorities, profit margins, AUD budget filtering and availability.
-**Missing implementations:** low-stock alerts, reorder suggestions and demand
-trends. [Team status](docs/team-status.md) distinguishes scope and contribution.
+**Connected:** all ten core functions: request capture, stock lookup, Qwen
+recommendations, restocking priorities, low-stock alerts, profit margins, AUD
+budget filtering, availability, reorder suggestions and demand trends.
+[Remaining-core acceptance](docs/remaining-core-acceptance.md) records source
+mappings, approved reorder/trend rules and evidence limits. [Team status](docs/team-status.md)
+distinguishes original contribution and gap-completion work.
 Shared products, sales, inventory and inventory-item tables contain labelled
 prototype data. Operator endpoints require the private token; the app remains
 localhost-only with no public account system.

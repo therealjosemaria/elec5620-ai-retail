@@ -37,6 +37,9 @@ from backend.availability import ProductAvailabilityResult
 from backend.profit_margin import ProfitMarginScope, ProfitMarginResult, analyse_profit_margin
 from backend.team_workflows import (classify_lookup, completed_sales, sqlite_sales_snapshot,
                                     validate_aud_budget)
+from backend.member4_api import build_router as build_member4_router
+from backend.demand import DemandScope, analyse_demand
+from backend.agent_workflows import inventory_workflow, TracedInventoryResult, TracedDemandResult
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
@@ -63,6 +66,11 @@ class Submission(BaseModel):
 class StockSelection(BaseModel):
     model_config = ConfigDict(extra="forbid")
     product_ids: list[str] = Field(max_length=100)
+
+
+class ReplenishmentSelection(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    product_ids: list[str] = Field(default_factory=list, max_length=100)
 
 
 class State(TypedDict, total=False):
@@ -197,7 +205,11 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
             ensure_recommendation_tables(db)
         yield
 
-    app = FastAPI(title="ELEC5620 — User Need Input", lifespan=lifespan)
+    app = FastAPI(
+        title="ELEC5620 — User Need Input",
+        lifespan=lifespan,
+        separate_input_output_schemas=False,
+    )
 
     @app.exception_handler(RecommendationError)
     async def recommendation_failure(_request, exception):
@@ -367,6 +379,42 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
                  report.kind, report.model_dump_json(), report.created_at.isoformat()))
         return report
 
+    def decision_result(selection, request, *, reorder):
+        require_operator(request)
+        ids = selection.product_ids
+        if not ids:
+            with connect() as db:
+                # Catalogue IDs include products with missing stock so gaps stay explicit.
+                ids = [p.product_id for p in load_products(db)]
+        if not ids:
+            raise HTTPException(400, "No authorised products are in scope.")
+        agent = InventoryProcurementAgent(path, requester=Requester.INVENTORY_PROCUREMENT_AGENT,
+            authorise=lambda role: role is Requester.INVENTORY_PROCUREMENT_AGENT)
+        report = inventory_workflow(agent=agent, lookup_request=InventoryLookupRequest(
+            product_ids=ids, requester=Requester.INVENTORY_PROCUREMENT_AGENT), reorder=reorder)
+        save_workflow(report)
+        return {**report.inventory_decision.model_dump(mode="json"), "workflow_id": str(report.workflow_id),
+                "trace": [step.model_dump(mode="json") for step in report.trace]}
+
+    @app.post("/api/low-stock-alerts", response_model=TracedInventoryResult)
+    def low_stock(selection: ReplenishmentSelection, request: Request):
+        return decision_result(selection, request, reorder=False)
+
+    @app.post("/api/reorder-suggestions", response_model=TracedInventoryResult)
+    def reorder_suggestions(selection: ReplenishmentSelection, request: Request):
+        return decision_result(selection, request, reorder=True)
+
+    @app.post("/api/demand-trends", response_model=TracedDemandResult)
+    def demand_trends(scope: DemandScope, request: Request):
+        require_operator(request)
+        today = datetime.now(timezone.utc).date()
+        with connect() as db:
+            report = BusinessInsightsAgent().demand(lambda: analyse_demand(scope,
+                load_sales=lambda: completed_sales(db, today=today), load_catalogue=lambda: load_products(db), today=today))
+        save_workflow(report)
+        return {**report.demand.model_dump(mode="json"), "workflow_id": str(report.workflow_id),
+                "trace": [step.model_dump(mode="json") for step in report.trace]}
+
     def customer_budget(request_id):
         try:
             return filtered_request(request_id)
@@ -535,6 +583,9 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
             return read_record(db, request_id)
 
     # Optional single-origin production deployment after npm run build.
+    app.include_router(build_member4_router(filter_request=filtered_request,
+        check_inventory=lambda ids: availability_results(ids, Requester.FOUNDER_OPERATOR),
+        require_operator=require_operator))
     dist = ROOT / "frontend/dist"
     if dist.is_dir():
         app.mount("/", StaticFiles(directory=dist, html=True), name="frontend")

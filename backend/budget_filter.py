@@ -1,5 +1,7 @@
 """UC-M4-01: Filter candidate products using the customer's budget."""
 
+from decimal import Decimal
+
 from enum import StrEnum
 
 from backend.models import CustomerRequest, DomainModel, Product
@@ -11,7 +13,7 @@ class BudgetFilterStatus(StrEnum):
 
 
 class BudgetFilterResult(DomainModel):
-    budget: str
+    budget: Decimal
     products: list[Product]
     excluded_product_ids: list[str]
     status: BudgetFilterStatus
@@ -57,7 +59,7 @@ def apply_budget_filter(
     ]
 
     return BudgetFilterResult(
-        budget=str(request.budget),
+        budget=request.budget,
         products=retained,
         excluded_product_ids=excluded,
         status=(

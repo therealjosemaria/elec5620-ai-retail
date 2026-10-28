@@ -10,13 +10,14 @@ agent servers or a fourth model-based supervisor.
 | Role | Responsibilities | Communication |
 | --- | --- | --- |
 | CustomerAgent | Existing capture step; Qwen catalogue recommendations; deterministic budget tool; customer result | Requests availability from InventoryProcurementAgent using validated product IDs and trusted server context |
-| InventoryProcurementAgent | Read-only stock lookup and availability classification | Returns typed status/quantity/timestamp/limitation to Customer or Business Insights; owns InventoryQueryService |
-| BusinessInsightsAgent | Existing restocking/profit tools over authorised completed sales | Requests inventory evidence through InventoryQueryService for restocking; profit reads sales directly |
+| InventoryProcurementAgent | Read-only lookup, availability, low-stock alerts and reorder quantities | Returns typed inventory evidence to Customer/Business Insights; uses InventoryQueryService for its own alert/reorder graph |
+| BusinessInsightsAgent | Restocking, profit and demand trends over authorised completed sales | Requests Inventory evidence for restocking; profit/demand read sales directly |
 
 Customer and Business Insights have separate LangGraph workflows. A graph node
 executes each real handoff; trace entries record its actual request and result.
-No Customer-to-Business-Insights link is invented. Low-stock alert, reorder and
-demand implementations remain future work; their communication is not simulated.
+No Customer-to-Business-Insights link is invented. Inventory alert/reorder graphs
+and Business Insights demand graph are implemented with actual source reads,
+deterministic approved rules and saved traces. See `remaining-core-acceptance.md`.
 
 UC-M1-01's capture endpoint still only extracts, validates, saves and publishes
 CustomerRequest. It does not generate recommendations or access inventory. The

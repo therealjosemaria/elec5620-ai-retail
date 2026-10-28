@@ -12,15 +12,15 @@ it does not assess work performed outside the fetched repository.
 | M1 / Jose | UC-M1-02 | Check Current Stock | Connected: operator token, batch lookup, exact source values, found/not-found/stale/error statuses, read-only storage. Merged through PR #3. |
 | M2 / Cedar | UC-M2-01 | Receive Drink Recommendations | Connected: Qwen ranks catalogue IDs with validated need/fact references; saved results are reused. Fixtures retain Cedar's matcher. Occasion/party-size suitability remains unresolved without catalogue metadata. |
 | M2 / Cedar | UC-M2-02 | Review Restocking Priorities | Connected: authenticated shared inventory and completed sales, explainable ranks, no-priority and stale/missing-data errors. Original fixed demonstration retained separately in fixture mode. |
-| M3 / Lio (Houyuchen / liou87) | UC-M3-01 | Receive Low-Stock Alert | Missing implementation; visible placeholder only. |
+| M3 / Lio (Houyuchen / liou87) | UC-M3-01 | Receive Low-Stock Alert | Implemented: Inventory Agent alerts at/below threshold, withholding stale/missing evidence; connected operator UI and saved trace. |
 | M3 / Lio (Houyuchen / liou87) | UC-M3-02 | Review Profit Margins | Connected: authenticated product/category/completed-period analysis, exact decimal calculations, missing-cost exclusions and coverage, no-data and source-error outcomes. |
 | M4 / Avan | UC-M4-01 | Apply Budget Filter | Connected: saved request and recommendation candidates, authorized catalogue prices, preserved order, explicit missing/invalid/foreign-currency budget and no-match results. |
 | M4 / Avan | UC-M4-02 | Check Product Availability | Connected: shared stock adapter, customer recommended/filtered candidates and operator selections; available/unavailable/unknown with source timestamps and limitations. |
-| M5 / Lira | UC-M5-01 | Review Reorder Suggestions | Missing implementation; visible placeholder only. |
-| M5 / Lira | UC-M5-02 | Detect Demand Trends | Missing implementation; visible placeholder only. |
+| M5 / Lira | UC-M5-01 | Review Reorder Suggestions | Implemented: current evidence and owner-approved target of twice threshold; explained quantities with no orders/stock writes. |
+| M5 / Lira | UC-M5-02 | Detect Demand Trends | Implemented: completed equal-length periods, quantities/change/classification and explicit insufficient evidence; connected UI and trace. |
 
-Seven use cases have connected implementations. Three implementations have not
-been found. Representative model checks are recorded separately; this does not claim
+All ten use cases now have connected implementations. Representative model checks
+and data/AI limitations remain documented separately; this does not claim
 all Stage 2 assessment requirements or unrestricted model accuracy are complete.
 
 ## Contributions evidenced in Git
@@ -40,6 +40,11 @@ all Stage 2 assessment requirements or unrestricted model accuracy are complete.
 - **Lira / Member 5:** no implementation commits/branches found in the fetched repository
   at this review. Local, unpushed or differently attributed work may exist; this
   statement does not infer that no work has been done.
+
+Gap completion for M3-01/M5-01/M5-02 and the latest Member 4 integration was
+performed by Jose's authorized coding assistant. Report ownership is retained;
+these additions are not attributed as implementation authored by the other owners.
+See `remaining-core-acceptance.md` for source mappings, approved rules and limits.
 
 PR #2 integrated all earlier contributor branches while retaining authors and
 history. PR #3 merged UC-M1-02. Main remains pull-request-only with no bypass list.
@@ -89,9 +94,11 @@ Start with fixture mode, so the test makes no university model calls.
 6. **Profit margins:** choose Pinot Noir to demonstrate partial coverage because
    one sale lacks cost; choose Shiraz for a complete summary. Dates are optional
    for product/category scope; a date-only scope requires both completed dates.
-7. Alerts, reorder and demand-trend tabs remain placeholders; they do not generate
-   fabricated outputs. Start a new request explicitly to clear a failed capture
-   attempt instead of needing an incognito browser window.
+7. **Alerts / Reorder:** select Sauvignon Blanc with the operator token: stock 3,
+   threshold 10, suggested quantity 17. All-product scope returns partial because
+   the sample deliberately includes stale/missing evidence.
+8. **Demand:** Shiraz, September 1–30 2026: 4 units versus 2 in August 2–31,
+   increasing by 2. Missing comparison rows remain unknown rather than zero.
 
 Use the README for installation and `VERIFICATION.md` for exact results. The
 university VPN plus reverse model tunnel is needed for university capture and

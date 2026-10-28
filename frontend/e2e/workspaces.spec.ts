@@ -29,7 +29,8 @@ test("All three workspaces expose honest integration states and preserve navigat
   await expect(page.getByRole("heading", {name: "Stock lookup results"})).toHaveCount(0);
   for (const title of ["Low-stock alerts", "Reorder suggestions"]) {
     await page.getByRole("tab", {name: new RegExp(title)}).click();
-    await expect(page.getByRole("tabpanel")).toContainText("No result has been generated.");
+    await expect(page.getByRole("tabpanel").getByLabel("Operator token")).toBeVisible();
+    await expect(page.getByRole("tabpanel").getByRole("status")).toHaveCount(0);
   }
   await page.getByRole("tab", {name: /Availability/}).click();
   await expect(page.getByRole("heading", {name: "Check product availability"})).toBeVisible();
@@ -38,7 +39,7 @@ test("All three workspaces expose honest integration states and preserve navigat
   await page.getByRole("tab", {name: /Profit margins/}).click();
   await expect(page.getByRole("button", {name: "Review profit margins"})).toBeVisible();
   await page.getByRole("tab", {name: /Demand trends/}).click();
-  await expect(page.getByText(/No sales trend is inferred/)).toBeVisible();
+  await expect(page.getByRole("button", {name:"Review demand trends"})).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", {name: /Good evidence/})).toBeVisible();
   await page.getByRole("link", {name: "Customer assistant", exact: true}).click();

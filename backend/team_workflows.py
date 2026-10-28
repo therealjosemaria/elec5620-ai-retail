@@ -26,11 +26,12 @@ def classify_lookup(result, *, now=None):
     status = {
         LookupStatus.FOUND: InventoryLookupStatus.FOUND,
         LookupStatus.NOT_FOUND: InventoryLookupStatus.NOT_FOUND,
+        LookupStatus.STALE: InventoryLookupStatus.STALE,
     }.get(result.status, InventoryLookupStatus.ERROR)
     evidence = AvailabilityEvidence(product_id=result.product_id, status=status,
         stock_quantity=item.stock_quantity if item else None,
         last_updated=item.last_updated if item else None, limitation=result.reason)
-    return check_product_availability(evidence, now=now)
+    return check_product_availability(evidence)
 
 
 def completed_sales(db, *, today: date):
