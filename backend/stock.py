@@ -108,6 +108,10 @@ class InventoryProcurementAgent:
         return [classify_lookup(result, now=self.clock()) for result in results]
 
     def evaluate_replenishment(self, records, *, reorder=False, rule_available=True):
+        if not reorder:
+            # UC-M3-01 alerts have their own module; reorder (UC-M5-01) is unchanged.
+            from backend.low_stock import evaluate_low_stock
+            return evaluate_low_stock(records, now=self.clock())
         from backend.replenishment import evaluate_inventory
         return evaluate_inventory(records, reorder=reorder, rule_available=rule_available, now=self.clock())
 
