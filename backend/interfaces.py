@@ -1,14 +1,17 @@
-"""Successful stock-query signature from Stage 1 Figure 4.
+"""InventoryQueryService: Figure 4 success overload plus §6.1.2 batch outcomes.
 
-No inventory access is implemented here. InventoryProcurementAgent will realize
-this protocol. CustomerAgent/BusinessInsightsAgent consume it, not inventory SQL.
-The not-found/stale/error result contract still needs reconciliation with §6.1.2;
-do not treat this successful-return signature as a complete stock feature.
+InventoryProcurementAgent realizes this protocol. Callers use a trusted,
+server-bound requester; a single-ID call raises on any non-current result.
 """
-from typing import Protocol
+from typing import Protocol, overload
 
 from backend.models import InventoryItem
+from backend.stock import InventoryLookupRequest, InventoryLookupResult
 
 
 class InventoryQueryService(Protocol):
+    @overload
+    def lookup_stock(self, request: InventoryLookupRequest) -> list[InventoryLookupResult]: ...
+
+    @overload
     def lookup_stock(self, product_id: str) -> InventoryItem: ...

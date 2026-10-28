@@ -67,9 +67,10 @@ No model calls are made when reading or upgrading the representation.
 IDs represent the associations shown in Figure 4 and §4. These schemas do not
 create tables, foreign keys, agent implementations, or the other members' features.
 Product and SalesRecord now have shared SQLite tables in `backend/retail_data.py`
-(see `docs/uc-m3-02-profit-margin.md`); Inventory and InventoryItem still have none.
+(see `docs/uc-m3-02-profit-margin.md`). UC-M1-02 adds the single-store `inventory`
+and `inventory_items` tables in `backend/stock.py`.
 
-## Inventory interface: agreed interpretation, implementation pending
+## Inventory interface: detailed implementation
 
 Figure 4 specifies `lookupStock(productId: String): InventoryItem`.
 `backend/interfaces.py` preserves that successful-return signature as a Python
@@ -80,10 +81,11 @@ However, §6.1.2 and UC-M1-02 additionally require authorization context,
 one-or-more product IDs, and explicit found/not-found/stale/error results.
 The diagram does not specify those result/error types. The user confirmed that
 the detailed written requirement governs behaviour; the diagram describes the
-simpler successful case. Before implementing UC-M1-02, update the protocol with
-the detailed request context and explicit result outcomes.
-The protocol is a faithful transcription of the success signature, **not a
-complete integration contract or an implemented stock lookup**.
+simpler successful case. UC-M1-02 now implements a batch request with trusted
+requester context and found/not-found/stale/error results. The single-ID overload
+is retained for existing consumers and raises rather than presenting unresolved
+evidence as current. `InventoryProcurementAgent` realizes the interface. See
+`uc-m1-02-stock-lookup.md` for authorization, freshness and acceptance details.
 
 No recommendation, budget filtering, clarification or inventory behaviour was
 added to UC-M1-01. No additional live model calls were needed for this alignment.

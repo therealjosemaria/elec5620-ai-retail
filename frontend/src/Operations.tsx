@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { RestockingDemo } from "./Member2";
 import type { Product } from "./Catalogue";
+import { StockLookup } from "./StockLookup";
 
 const inventoryFeatures = [
   {title: "Stock lookup", member: "M1", id: "UC-M1-02", description: "Current stock quantities and source update times for selected products.", dependency: "The inventory query service is not connected."},
@@ -21,17 +22,13 @@ export function InventoryWorkspace({ products, error }: { products: Product[]; e
   return <div className="operations-workspace">
     <header className="page-heading"><p className="eyebrow">02 / INVENTORY & PROCUREMENT AGENT</p>
       <h1>A clearer view.<br/><em>Of every bottle.</em></h1><p>Review stock, spot shortages and plan replenishment from verified inventory evidence.</p></header>
-    <div className="workspace-notice"><span className="status-dot pending-dot"/>Inventory service awaiting integration. Catalogue entries below do not imply current stock.</div>
+    <div className="workspace-notice">Stock lookup is connected. Operator authorisation is required; other inventory tools await integration.</div>
     <div className="workspace-tabs" role="tablist" aria-label="Inventory tools">{inventoryFeatures.map((f, i) =>
       <button key={f.id} role="tab" id={`inv-tab-${i}`} aria-controls="inventory-panel" aria-selected={tab === i} onClick={() => setTab(i)}>{f.title}<small>{f.member}</small></button>)}</div>
     <section id="inventory-panel" role="tabpanel" aria-labelledby={`inv-tab-${tab}`}>
-      <div className="tool-heading"><p className="eyebrow">{feature.id}</p><span className="badge pending">Not connected</span></div>
-      <PendingFeature title={feature.title} description={feature.description} detail={feature.dependency}/>
-      {tab === 0 && <div className="inventory-list"><h3>Catalogue reference</h3>
-        {error ? <p role="alert" className="error">{error}</p> : <div className="table-scroll"><table>
-          <thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Updated</th></tr></thead>
-          <tbody>{products.map(p => <tr key={p.product_id}><td><strong>{p.name}</strong><small>{p.product_id}</small></td><td>{p.category}</td><td>Unknown</td><td>Not connected</td></tr>)}</tbody>
-        </table></div>}</div>}
+      <div className="tool-heading"><p className="eyebrow">{feature.id}</p><span className="badge pending">{tab === 0 ? "Operator access" : "Not connected"}</span></div>
+      {tab === 0 ? <StockLookup products={products} error={error}/> :
+        <PendingFeature title={feature.title} description={feature.description} detail={feature.dependency}/>}
     </section>
   </div>;
 }

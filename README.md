@@ -1,7 +1,8 @@
 # ELEC5620 — shared development foundation
 
-**Branch status:** `develop` contains the M2 prototype and unified interface as
-separate commits. These changes have not been merged into `main`.
+**Team integration:** all published contributor branches as of 28 October 2026
+are integrated into `main` through PR #2. This branch adds UC-M1-02 stock lookup;
+see [its acceptance and integration guide](docs/uc-m1-02-stock-lookup.md).
 
 This guide covers first setup, seeing React, daily development, live-model access,
 tests and the team Git workflow. Start with fixture mode; no API key or VPN is
@@ -25,6 +26,11 @@ The unified [three-agent interface](docs/unified-interface.md) now opens on a
 catalogue landing page. Use **Customer assistant**, **Inventory & procurement**
 and **Business insights** in the navigation. Pending features are labelled;
 the interface does not imply all ten backend use cases are implemented.
+
+For stock lookup, set a private `OPERATOR_TOKEN` in `.env`, restart FastAPI,
+open **Inventory & procurement**, select products and enter that token.
+Lookup makes no model calls. See the stock guide for sample data, stale records,
+the read-only API and trusted agent access. The token is never committed.
 
 ## Requirements and setup
 
@@ -465,7 +471,9 @@ Never post `.env`, authentication headers, keys or credential screenshots.
 - Evidence checks cannot prove complete or semantically correct model extraction.
 - The capture use case publishes to a durable request inbox consumed by Member 2's
   rule-based recommendation prototype; a full event-history UI is not included.
-- Stock lookup and its detailed interface still need implementation.
+- Stock lookup is implemented on this branch with operator authorisation and
+  found/not-found/stale/error results. Existing stock is a labelled prototype
+  snapshot, not a real store feed; timestamps are never refreshed on restart.
 - No authentication: keep the app local.
 - Linux ARM64 is the tested platform. Mac/Windows-WSL teammate onboarding remains unverified.
 - This is not an offline dependency bundle. Locked stable releases reduce variation,
