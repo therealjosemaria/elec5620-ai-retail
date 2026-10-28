@@ -10,6 +10,11 @@ authoritative submitted Stage 1 report, including its diagrams.
 - Drive source: https://drive.google.com/file/d/1IkMlRMNZu36VanWrdGSnTbHgYw4fJGWu/view
 - In this workspace session, an attached copy is available at:
   `/home/jmos0905/.codex/attachments/595ea06a-d1eb-42d5-a9a4-11c79e971fac/❗️AI_Multi_Agent_Alcohol_Retail_Project_M5_Sequence_Fixed.docx.pdf`.
+- On 27 October 2026, the user confirmed that the local
+  `/Users/cedar/Downloads/AIMultiAgentAlcoholRetail_Project-1.pdf`
+  is that submitted report under a different filename. Use this accessible copy
+  on this Mac. Its pagination differs from older alignment notes; cite sections
+  and figure numbers after inspecting the source.
 - Do not substitute the later “Critical Fixes” revision.
 - If the source is unavailable, request access or an upload rather than inventing
   its requirements. Local alignment notes are aids, not replacements for the source.
