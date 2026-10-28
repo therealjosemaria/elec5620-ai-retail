@@ -2,10 +2,12 @@
 
 Target: [KAN board 2](https://mbse5620.atlassian.net/jira/software/projects/KAN/boards/2).
 Jira access is now working. KAN-4 through KAN-20 were created and their statuses
-verified: 10 Done, 2 In Review, 4 To Do and 1 In Progress. See `jira-issue-map.json`.
+verified. After PR #8: 15 Done, 1 To Do and 1 In Progress. See `jira-issue-map.json`.
 The owner confirmed KAN-1/2/3 were default placeholders and requested deletion;
 they still require removal in Jira because the connector has no deletion tool.
-Sprints are disabled and require a space-admin UI toggle before sprint setup.
+Sprints are now enabled; future sprint 1 contains the remaining deployment/demo
+and real Agile-evidence items. Historical tables below record the earlier audit;
+the issue map and team-status.md hold the latest completion state.
 
 Authority: submitted Stage 1 §6 and §10.1–10.10 with corresponding diagrams.
 Names identify report ownership or evidenced contribution, not Jira assignments.
