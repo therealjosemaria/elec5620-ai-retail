@@ -1,5 +1,10 @@
 # Member 2 implementation and demonstration
 
+**Current recommendation behaviour:** live mode now uses cached Qwen results;
+the matcher description below documents the original fixture implementation.
+See [combined-preference validation](recommendation-preference-validation.md)
+for the latest suitability correction, cache migration and verification.
+
 **28 October integration update:** the existing recommendation API feeds Avan's
 budget and availability stages. Restocking now also has an authenticated shared
 SQLite inventory/sales connection through InventoryQueryService. The original
