@@ -347,3 +347,23 @@ browser check: product-003 produced a presented result and visible Business
 Insights → Inventory → Business Insights trace, workflow
 `13f72b38-59b1-4eab-8fc8-6263c7b65c7e`. University usage did not increase. The
 private operator token was supplied only through process memory, not output.
+
+## Jira contribution backlog — 28 October 2026
+
+The connection authorized for the university project successfully accessed Jira;
+the earlier connection routed to another linked account. Read all existing issues,
+board configuration, issue types, assignable users and sprint support first.
+Created KAN-4 through KAN-20 from the 17-item evidence-based backlog. Subsequent
+JQL readback verified all summaries/statuses: 10 Done, 2 In Review, 4 To Do,
+1 In Progress. Original report ownership and extra integration contributions are
+recorded with commit/PR links; retrospective tracking is explicitly labelled.
+Only Jose was returned as an assignable human, so other members were credited
+in descriptions/labels without guessing Jira identities. No estimates, historical
+dates, meetings or worklogs were fabricated. The issue map is in docs/agile/.
+
+The user confirmed KAN-1/2/3 are default placeholders and requested deletion.
+The connected tool catalog exposes no issue-deletion operation; they remain
+pending UI deletion. Board 2 is team-managed and reports that it does not support
+sprints. Its space admin must enable Sprints/Reports in the Jira UI; this toggle
+also has no connected operation. KAN-17 records the remaining setup steps. No
+sprint or burndown completion is claimed.

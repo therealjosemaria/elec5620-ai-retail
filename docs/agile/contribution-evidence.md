@@ -1,9 +1,11 @@
 # Jira contribution evidence — 28 October 2026
 
 Target: [KAN board 2](https://mbse5620.atlassian.net/jira/software/projects/KAN/boards/2).
-Jira access currently fails; no external issues/statuses have been changed.
-Read existing issues before importing so KAN-1, KAN-2 and subsequent team work
-are preserved and duplicates are avoided.
+Jira access is now working. KAN-4 through KAN-20 were created and their statuses
+verified: 10 Done, 2 In Review, 4 To Do and 1 In Progress. See `jira-issue-map.json`.
+The owner confirmed KAN-1/2/3 were default placeholders and requested deletion;
+they still require removal in Jira because the connector has no deletion tool.
+Sprints are disabled and require a space-admin UI toggle before sprint setup.
 
 Authority: submitted Stage 1 §6 and §10.1–10.10 with corresponding diagrams.
 Names identify report ownership or evidenced contribution, not Jira assignments.
@@ -37,7 +39,7 @@ start/finish dates. Missing published commits do not prove a member did no work.
 | Verify three-agent LangGraph communication | Jose: PR #5 and [PR #6](https://github.com/therealjosemaria/elec5620-ai-retail/pull/6); actual Customer–Inventory and Business Insights–Inventory traces visible in React; profit reads sales directly | Done for implemented paths |
 | Review Avan's latest Member 4 integration | Avan: [1a9f5f8](https://github.com/therealjosemaria/elec5620-ai-retail/commit/1a9f5f8) and [0c85855](https://github.com/therealjosemaria/elec5620-ai-retail/commit/0c85855) on `feat/avan-budget-availability`; Decimal/stale-status alignment and extra API/tests are not ancestors of current main | In Review; reconcile endpoints, authorisation and contracts before merge; new branch tests not run in this audit |
 | Clean deployment/joint demo rehearsal | Earlier foundation source-only rehearsal exists; current complete source, Canvas download/deploy and contribution statement still need team rehearsal | To Do |
-| Jira sprint/real Agile meeting evidence | Owner-created KAN board, prepared backlog/template; no genuine meeting attendance, estimates or historical burndown supplied | Connection blocks setup; team supplies real meetings/estimates |
+| Jira sprint/real Agile meeting evidence | KAN-17 tracks actual setup. Real backlog created; Sprints disabled; no genuine meeting attendance, estimates or historical burndown supplied | In Progress; space admin enables Sprints/Reports, team supplies real meetings/estimates |
 
 Main includes PRs #2–#6. Current checks: 230 mocked/fixture backend tests,
 11 browser tests and production build passed. Fresh university capture and
@@ -45,10 +47,11 @@ recommendations plus customer graph used two attempts; cached repeat/reload and
 actual Business Insights handoff added zero. See `../../VERIFICATION.md` for IDs
 and exact limitations.
 
-## Update procedure once connected
+## Remaining Jira setup
 
-1. Read KAN issues, statuses, members, board type and sprint/report settings.
-2. Match by UC ID/summary; update existing records and create only missing items.
+1. Existing issues, statuses, assignable users, board configuration and sprint
+   support were inspected. Enable Sprints and Reports in the space settings UI.
+2. Use the saved issue map to update existing records and create only missing items.
    Include both original author and integration credit in the description.
 3. Add evidence links and present-day notes; do not invent historical worklogs,
    completion dates, meetings, votes or estimates.
