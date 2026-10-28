@@ -100,6 +100,8 @@ browser preview uses its separate SSH forward to port 8004.
 
 The [agent workflow guide](agent-workflows.md) describes Customer → Inventory and
 Business Insights → Inventory handoffs and persisted traces. The [Agile guide](agile/README.md)
-links the owner's existing KAN board; connector access is still required to import
-the prepared backlog or configure a sprint. No historical meetings or burndown
-data have been fabricated.
+links the owner's existing KAN board. KAN-4 through KAN-20 now track the ten use
+cases and shared contributions with evidence: 10 Done, 2 In Review, 4 To Do and
+1 In Progress. Sprints are disabled and require the space-admin UI toggle. Only
+Jose is currently listed as an assignable human; other authors are credited in
+descriptions/labels. No historical meetings or burndown data have been fabricated.

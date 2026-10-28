@@ -8,19 +8,33 @@ delivery evidence; the retail application's ten core use cases remain unchanged.
 
 Existing project: **mon-13-15-group-8**, key **KAN**,
 [board 2](https://mbse5620.atlassian.net/jira/software/projects/KAN/boards/2).
-The owner created this board; preserve its existing KAN-1 and KAN-2 items.
-The connected Atlassian service currently cannot access Jira, so no backlog import,
-board conversion or sprint creation has been performed by this integration.
-Reconnect the Atlassian integration to this site before making those changes.
-Check the board's available sprint/backlog/report settings; use Scrum-compatible
-tracking for the required burndown. Keep the existing review column.
+Jira access is working through the account authorized for this site. The 17 real
+items are **KAN-4 through KAN-20**: 10 Done, 2 In Review, 4 To Do, 1 In Progress.
+Each includes report/contribution evidence and current tracking notes. Only Jose
+is currently returned as an assignable human; others are credited in descriptions
+and member labels until their Jira accounts can be assigned.
 
-`backlog.csv` is an import-ready starting backlog. Check the actual project's
-available issue types and map Summary, Description and Labels during import.
-It contains all ten core UCs plus current integration/verification work. No
-assignees, estimates, historical status changes or completion dates are invented.
+The owner confirmed KAN-1, KAN-2 and KAN-3 are default placeholders and requested
+their deletion. The connected tool catalog has no issue-deletion operation, so
+they remain pending removal in Jira. Open each → **… → Delete**, removing the
+subtask KAN-3 first. Do not delete real KAN-4 through KAN-20.
+
+This team-managed board currently does not support sprints. A space admin must
+open the space menu **… → Space settings → Features → Sprints** and enable it.
+Enable/add Reports for the required burndown. The connector cannot toggle these
+features. No sprint, estimates or historical burndown have been fabricated.
+
+`backlog.csv` is the source used to prepare these items, not a second import to run.
+Use `jira-issue-map.json` to update existing items and avoid duplicates. It contains
+all ten core UCs plus integration and delivery work. No estimates, historical
+status changes or completion dates are invented.
 Items labelled `retrospective` document work already evidenced by source/PRs;
-the team should confirm their acceptance and current status after importing.
+the team should confirm their acceptance and current status.
+
+[Contribution evidence](contribution-evidence.md) maps current implementations,
+original authors, integration credit, remaining work and suggested present-day
+tracking states to commits/PRs. It also records Avan's two newer unmerged commits;
+their presence is contribution evidence, not proof they are already integrated.
 
 ## Real sprint and burndown
 
