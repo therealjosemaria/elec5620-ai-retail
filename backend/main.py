@@ -20,6 +20,7 @@ from openai import LengthFinishReasonError
 from backend.capture import CapturedEvidence, normalize
 from backend.models import CustomerRequest, RequestStatus
 from backend.handoff import RequestPublisher
+from backend.member4_api import router as member4_router
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
@@ -165,7 +166,12 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
                 db.execute("ALTER TABLE customer_requests ADD COLUMN request_status TEXT NOT NULL DEFAULT 'RequestAvailable'")
         yield
 
-    app = FastAPI(title="ELEC5620 — User Need Input", lifespan=lifespan)
+    app = FastAPI(
+        title="ELEC5620 — User Need Input",
+        lifespan=lifespan,
+        separate_input_output_schemas=False,
+    )
+    app.include_router(member4_router)
 
     @app.exception_handler(sqlite3.Error)
     async def storage_failure(_request, _exception):
