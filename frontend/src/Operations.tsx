@@ -2,6 +2,7 @@ import { useState } from "react";
 import { RestockingDemo } from "./Member2";
 import type { Product } from "./Catalogue";
 import { StockLookup } from "./StockLookup";
+import { OperatorAnalysis } from "./OperatorAnalysis";
 
 const inventoryFeatures = [
   {title: "Stock lookup", member: "M1", id: "UC-M1-02", description: "Current stock quantities and source update times for selected products.", dependency: "The inventory query service is not connected."},
@@ -15,25 +16,23 @@ export function PendingFeature({ title, description, detail }: { title: string; 
     <span className="badge pending">Awaiting integration</span><h3>{title}</h3><p>{description}</p>
     <p className="muted">{detail}</p><span className="empty-note">No result has been generated.</span></div>;
 }
-
 export function InventoryWorkspace({ products, error }: { products: Product[]; error: string }) {
   const [tab, setTab] = useState(0);
   const feature = inventoryFeatures[tab];
   return <div className="operations-workspace">
     <header className="page-heading"><p className="eyebrow">02 / INVENTORY & PROCUREMENT AGENT</p>
       <h1>A clearer view.<br/><em>Of every bottle.</em></h1><p>Review stock, spot shortages and plan replenishment from verified inventory evidence.</p></header>
-    <div className="workspace-notice">Stock lookup is connected. Operator authorisation is required; other inventory tools await integration.</div>
+    <div className="workspace-notice">Stock lookup and availability are connected. Operator authorisation is required. Alerts and reorder suggestions are not implemented.</div>
     <div className="workspace-tabs" role="tablist" aria-label="Inventory tools">{inventoryFeatures.map((f, i) =>
       <button key={f.id} role="tab" id={`inv-tab-${i}`} aria-controls="inventory-panel" aria-selected={tab === i} onClick={() => setTab(i)}>{f.title}<small>{f.member}</small></button>)}</div>
     <section id="inventory-panel" role="tabpanel" aria-labelledby={`inv-tab-${tab}`}>
-      <div className="tool-heading"><p className="eyebrow">{feature.id}</p><span className="badge pending">{tab === 0 ? "Operator access" : "Not connected"}</span></div>
-      {tab === 0 ? <StockLookup products={products} error={error}/> :
+      <div className="tool-heading"><p className="eyebrow">{feature.id}</p><span className="badge pending">{tab === 0 || tab === 2 ? "Operator access" : "Not implemented"}</span></div>
+      {tab === 0 || tab === 2 ? <StockLookup key={tab} products={products} error={error} availability={tab === 2}/> :
         <PendingFeature title={feature.title} description={feature.description} detail={feature.dependency}/>}
     </section>
   </div>;
 }
-
-export function InsightsWorkspace({ mode }: { mode: string | null }) {
+export function InsightsWorkspace({ mode, products }: { mode: string | null; products: Product[] }) {
   const [tab, setTab] = useState(0);
   const tabs = ["Restocking priorities", "Profit margins", "Demand trends"];
   return <div className="operations-workspace">
@@ -43,16 +42,9 @@ export function InsightsWorkspace({ mode }: { mode: string | null }) {
     <div className="workspace-tabs" role="tablist" aria-label="Business tools">{tabs.map((t, i) =>
       <button key={t} role="tab" id={`insight-tab-${i}`} aria-controls="insights-panel" aria-selected={tab === i} onClick={() => setTab(i)}>{t}<small>M{i + 2 === 4 ? 5 : i + 2}</small></button>)}</div>
     <section id="insights-panel" role="tabpanel" aria-labelledby={`insight-tab-${tab}`}>
-      {tab === 0 && (mode === "fixture" ? <RestockingDemo/> : <PendingFeature title="Restocking priorities" description="Decide which products need replenishment attention first." detail="The sample demonstration runs in fixture mode. Connected analysis requires operator authentication and authorised inventory and sales services."/>)}
-      {tab === 1 && <><p className="eyebrow tool-heading">UC-M3-02 / MEMBER 3</p><PendingFeature title="Profit margin analysis" description="Review revenue, cost, profit and margin for a product, category or completed period." detail="The calculation module exists. Its authenticated API and page integration are still pending."/></>}
+      {tab === 0 && <><OperatorAnalysis key="restocking" kind="restocking" products={products}/>{mode === "fixture" && <RestockingDemo/>}</>}
+      {tab === 1 && <OperatorAnalysis key="profit" kind="profit" products={products}/>}
       {tab === 2 && <><p className="eyebrow tool-heading">UC-M5-02 / MEMBER 5</p><PendingFeature title="Demand trends" description="Compare completed sales periods to understand increasing, decreasing or stable demand." detail="The analysis service and comparison rule have not been connected. No sales trend is inferred."/></>}
     </section>
   </div>;
-}
-
-export function CustomerPendingTools() {
-  return <section className="next-steps" aria-label="Customer workflow integrations"><p className="eyebrow">NEXT IN THE CUSTOMER JOURNEY</p>
-    <div className="next-step-grid"><div><span className="badge pending">Awaiting integration</span><h3>Budget filtering</h3><p>Keep recommended products within your stated budget.</p><small>M4 · UC-M4-01</small></div>
-    <div><span className="badge pending">Awaiting integration</span><h3>Product availability</h3><p>Confirm availability through the Inventory & Procurement Agent.</p><small>M4 · UC-M4-02</small></div></div>
-  </section>;
 }

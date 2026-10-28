@@ -224,3 +224,29 @@ databases and credentials in the parent folder were preserved. A separate ignore
 `.env` configures fixture preview and a private operator token. It is excluded
 from Git along with databases, dependencies and screenshots. No university model
 calls were used in this integration or UC-M1-02 work.
+
+## Connected team workflows — 28 October 2026 (Sydney)
+
+UC-M1-02 merged to main through PR #3 (`24800b4`). Branch
+`feat/connect-team-workflows` adds API/UI adapters for Avan's budget and
+availability modules, Lio's profit margins, and Cedar's restocking against the
+shared SQLite source. The user agreed AUD for catalogue/unqualified dollar
+budgets; recognized explicit foreign currencies fail without FX conversion.
+
+Final checks: **190 backend tests and ten Playwright tests passed; production
+build passed.** Tests exercise the complete saved-request → recommendations →
+budget → stock availability flow; operator availability; connected restocking;
+profit figures and missing-cost coverage; denied operator access; source outages;
+future sales exclusion; missing budget/no matches; unsupported currencies; and
+unchanged SQL data through read-only operations. No university model calls.
+
+Cross-feature browser tests exposed duplicate React sibling keys that produced
+duplicate recommendation panels; keys now identify both feature and request.
+A manual Start a new request action clears a failed/pending browser attempt;
+this does not introduce automatic retries or new model requests.
+
+Source/diagram checks: report §6.2.1, §10.4/10.6/10.7/10.8 and Figures 14/16,
+in addition to the earlier shared-model and stock references. The app still uses
+prototype data, a limited rule recommendation matcher and localhost-only access.
+Low-stock alerts, reorder suggestions and demand trends remain unimplemented.
+`docs/team-status.md` provides the full use-case and contributor overview.

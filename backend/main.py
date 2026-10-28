@@ -26,7 +26,12 @@ from backend.recommendations import RecommendationResult, recommend_drinks
 from backend.restocking import RestockingResult, RestockingScope, analyse_restocking
 from backend.member2_demo import demo_restocking
 from backend.stock import (InventoryLookupRequest, InventoryLookupResult,
-                           InventoryProcurementAgent, Requester, ensure_inventory_data)
+                           InventoryProcurementAgent, Requester, LookupStatus, ensure_inventory_data)
+from backend.budget_filter import BudgetFilterError, BudgetFilterResult, apply_budget_filter
+from backend.availability import ProductAvailabilityResult
+from backend.profit_margin import ProfitMarginScope, ProfitMarginResult, analyse_profit_margin
+from backend.team_workflows import (classify_lookup, completed_sales, sqlite_sales_snapshot,
+                                    validate_aud_budget)
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
@@ -226,16 +231,35 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
 
     @app.post("/api/inventory/lookup", response_model=list[InventoryLookupResult])
     def current_stock(selection: StockSelection, request: Request):
+        require_operator(request)
+        return lookup_selected(selection.product_ids, Requester.FOUNDER_OPERATOR)
+
+    def require_operator(request):
         # Browser navigation and claimed roles are not authorisation.
         supplied = request.headers.get("Authorization", "")
         if not stock_token or not compare_digest(supplied.encode(), ("Bearer " + stock_token).encode()):
             raise HTTPException(403, "Operator access denied. Enter the configured operator token.")
-        if not selection.product_ids:
+
+    def lookup_selected(ids, requester):
+        if not ids:
             raise HTTPException(400, "Select at least one product; no inventory lookup performed.")
-        service = InventoryProcurementAgent(path, requester=Requester.FOUNDER_OPERATOR,
-            authorise=lambda role: role is Requester.FOUNDER_OPERATOR)
+        service = InventoryProcurementAgent(path, requester=requester,
+            authorise=lambda role: role is requester)
         return service.lookup_stock(InventoryLookupRequest(
-            product_ids=selection.product_ids, requester=Requester.FOUNDER_OPERATOR))
+            product_ids=ids, requester=requester))
+
+    def availability_results(ids, requester):
+        results = lookup_selected(ids, requester)
+        if results and all(r.status == LookupStatus.ERROR and r.reason == "Invalid product identifier." for r in results):
+            raise HTTPException(400, "Select valid product identifiers; no availability check performed.")
+        if results and all(r.status == LookupStatus.ERROR and r.reason == "Inventory source unavailable." for r in results):
+            raise HTTPException(503, "Inventory source unavailable; availability cannot be confirmed.")
+        return [classify_lookup(r) for r in results]
+
+    @app.post("/api/inventory/availability", response_model=list[ProductAvailabilityResult])
+    def operator_availability(selection: StockSelection, request: Request):
+        require_operator(request)
+        return availability_results(selection.product_ids, Requester.FOUNDER_OPERATOR)
 
     @app.get("/api/requests/{request_id}", response_model=SavedRequest)
     def get_request(request_id: UUID):
@@ -253,21 +277,82 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
                 raise HTTPException(409, "Request has not been published to the recommendation inbox.")
             return recommend_drinks(needs, lambda: load_products(db))
 
+    def filtered_request(request_id):
+        with connect() as db:
+            saved = read_record(db, str(request_id))
+            try:
+                needs = read_published_request(db, str(request_id), RequestConsumer.BUDGET_FILTER)
+            except LookupError:
+                raise HTTPException(409, "Request has not been published downstream.")
+            candidates = recommend_drinks(needs, lambda: load_products(db))
+            if candidates.outcome not in ("complete", "no_match"):
+                raise HTTPException(409, "; ".join(candidates.limitations))
+            try:
+                validate_aud_budget(saved["text"])
+                return apply_budget_filter(needs, [r.product for r in candidates.recommendations])
+            except BudgetFilterError as exc:
+                raise HTTPException(422, str(exc))
+
+    @app.get("/api/requests/{request_id}/budget-filter", response_model=BudgetFilterResult)
+    def budget_filter(request_id: UUID):
+        return filtered_request(request_id)
+
+    @app.get("/api/requests/{request_id}/availability", response_model=list[ProductAvailabilityResult])
+    def customer_availability(request_id: UUID, within_budget: bool = False):
+        # Saved UUID and valid published request identify the local customer workflow.
+        if within_budget:
+            products = filtered_request(request_id).products
+        else:
+            with connect() as db:
+                read_record(db, str(request_id))
+                try:
+                    needs = read_published_request(db, str(request_id), RequestConsumer.RECOMMENDATION)
+                except LookupError:
+                    raise HTTPException(409, "Request has not been published downstream.")
+                matches = recommend_drinks(needs, lambda: load_products(db))
+                if matches.outcome not in ("complete", "no_match"):
+                    raise HTTPException(409, "; ".join(matches.limitations))
+                products = [r.product for r in matches.recommendations]
+        if not products:
+            return []
+        return availability_results([p.product_id for p in products], Requester.CUSTOMER_AGENT)
+
+    @app.post("/api/profit-margins", response_model=ProfitMarginResult)
+    def profit_margins(scope: ProfitMarginScope, request: Request):
+        require_operator(request)
+        today = datetime.now(timezone.utc).date()
+        with connect() as db:
+            return analyse_profit_margin(scope, lambda: completed_sales(db, today=today),
+                                         lambda: load_products(db), today=today)
+
     @app.post("/api/restocking-priorities", response_model=RestockingResult)
     def restocking(scope: RestockingScope, request: Request):
         # Integration callback must authenticate the request and authorise this scope.
         # No browser-supplied boolean or role can enable access. Denied by default.
         try:
-            allowed = restocking_authorise is not None and restocking_authorise(request, scope) is True
+            if restocking_authorise is None:
+                require_operator(request)
+                allowed = True
+            else:
+                allowed = restocking_authorise(request, scope) is True
         except Exception:
             allowed = False
         if not allowed:
             raise HTTPException(403, "Operator authorisation is required; no analysis performed.")
-        if inventory_service is None or restocking_sales_loader is None:
+        if restocking_authorise is not None and (inventory_service is None or restocking_sales_loader is None):
             raise HTTPException(503, "Authorised inventory and sales snapshot services are not connected.")
         with connect() as db:
-            return analyse_restocking(scope, authorise=lambda _: True, load_catalogue=lambda: load_products(db),
-                                      inventory=inventory_service, load_sales=restocking_sales_loader)
+            now = datetime.now(timezone.utc)
+            service = inventory_service if inventory_service is not None else InventoryProcurementAgent(
+                path, requester=Requester.BUSINESS_INSIGHTS_AGENT,
+                authorise=lambda role: role is Requester.BUSINESS_INSIGHTS_AGENT)
+            loader = restocking_sales_loader if restocking_sales_loader is not None else lambda: sqlite_sales_snapshot(db, now=now)
+            result = analyse_restocking(scope, authorise=lambda _: True, load_catalogue=lambda: load_products(db),
+                                      inventory=service, load_sales=loader, now=now)
+            if restocking_authorise is None:
+                result.data_mode = "sqlite_prototype"
+                result.limitations.append("Prototype SQLite data. Sales snapshot timestamp is its read time; inventory timestamps are preserved.")
+            return result
 
     @app.post("/api/demo/restocking-priorities", response_model=RestockingResult)
     def restocking_demo(scope: RestockingScope):

@@ -22,7 +22,10 @@ are created at startup and seeded with prototype data only when both are empty.
 The seed includes one September sale without cost, so a Wine/September analysis
 demonstrates the 3a partial result.
 
-Not yet wired: no API route or UI. Those depend on the shared decisions listed at the end.
+**28 October integration update:** authenticated `/api/profit-margins` and the
+Business insights page now call this module with shared completed SQLite sales.
+Missing-cost coverage and errors are rendered explicitly. The decisions below
+describe the original module; see `team-status.md` for current wiring.
 
 ## Implementation decisions (Member 3)
 
@@ -55,7 +58,7 @@ and `partial` carry financial values.
 | --- | --- | --- |
 | Main 1–6 | Exact revenue, cost, profit, margin and record count per scope | `test_main_flow_exact_figures_for_each_scope`, `test_result_states_scope_and_basis_with_decimal_strings` |
 | 2a invalid scope | Rejected before sales are read | `test_2a_invalid_scope_rejected_without_reading_sales` |
-| 2a unauthorised | **Not implemented** — needs the shared authorisation mechanism | — |
+| 2a unauthorised | Operator token required before loaders run | `test_operator_endpoints_deny_before_returning_any_data` |
 | 3a missing cost | Excluded and reported with coverage; no figures if nothing usable | `test_3a_missing_cost_excluded_with_coverage_reported`, `test_3a_all_costs_missing_produces_no_figures` |
 | 3b source unavailable | No values; no data-source details exposed | `test_3b_unavailable_source_returns_no_values_or_details` |
 | 4a no records in scope | Explicit `no_data` | `test_4a_no_sales_in_scope_is_explicit` |

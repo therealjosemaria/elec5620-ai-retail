@@ -42,7 +42,7 @@ export function ProductDetail({ product, close }: { product: Product; close: () 
       <h2 id="detail-name">{product.name}</h2><p className="detail-price">{product.price}<span> catalogue price</span></p>
       <dl><div><dt>Alcohol</dt><dd>{product.abv}% ABV</dd></div><div><dt>Sweetness</dt><dd>{product.sweetness}</dd></div>
         <div><dt>Flavour</dt><dd>{product.flavour_tags.join(", ") || "Not specified"}</dd></div></dl>
-      <p className="muted">Availability has not been checked. Prices are from the project catalogue; currency is not specified.</p>
+      <p className="muted">Availability has not been checked. Prototype catalogue prices are in AUD.</p>
       <small>{product.product_id}</small>
     </div>
   </dialog>;
@@ -72,7 +72,7 @@ export function Catalogue({ products, loading, error }: { products: Product[]; l
       <h3><button className="text-button" onClick={() => setDetail(p)}>{p.name}</button></h3>
       <p className="card-bottom"><span>{p.flavour_tags.slice(0, 2).join(" · ") || "Flavour not specified"}</span><strong>{p.price}</strong></p>
     </article>)}</div>
-    <p className="catalogue-note">Project catalogue prices · currency unspecified · availability unchecked · original bottle illustrations</p>
+    <p className="catalogue-note">Project catalogue prices in AUD · availability unchecked · original bottle illustrations</p>
     {detail && <ProductDetail product={detail} close={() => setDetail(null)}/>}
   </section>;
 }

@@ -1,8 +1,9 @@
 # ELEC5620 — shared development foundation
 
 **Team integration:** all published contributor branches as of 28 October 2026
-are integrated into `main` through PR #2. This branch adds UC-M1-02 stock lookup;
-see [its acceptance and integration guide](docs/uc-m1-02-stock-lookup.md).
+are integrated into `main` through PR #2; PR #3 adds UC-M1-02 stock lookup.
+This branch connects budget, availability, profit and restocking modules to the
+shared frontend. See the [full UC/contribution status and joint test walkthrough](docs/team-status.md).
 
 This guide covers first setup, seeing React, daily development, live-model access,
 tests and the team Git workflow. Start with fixture mode; no API key or VPN is
@@ -259,9 +260,8 @@ server on port 8001 with `data/e2e.sqlite3` and exercise the real compiled React
 API, LangGraph, persistence and reload. Browser downloads need internet.
 Do not run against a live-mode server; the test config starts its own.
 
-The original foundation baseline was **100 backend tests and two browser tests**;
-Member 2 adds feature and browser coverage. See its implementation document for
-current verification results. Port 8001 must be free. Browser tests always
+The current combined baseline is **190 backend tests and ten browser tests**.
+See `VERIFICATION.md` for scope and evidence. Port 8001 must be free. Browser tests always
 start their own fixture backend, even if your development `.env` says live.
 They use the compiled React build, not the Vite development server.
 
@@ -310,17 +310,13 @@ Existing `team-setup/` files are untouched historical planning material.
 | `VERIFICATION.md` | Verification evidence and limitations |
 | `AGENTS.md` | Standing project instructions |
 
-**Implemented:** UC-M1-01 main flow and documented extension paths.
-See [its acceptance matrix](docs/uc-m1-01-acceptance.md) for evidence and limits.
-**Partially implemented:** UC-M3-02 profit margin calculation over the shared
-sales data, without an API route or UI yet; see [its reference](docs/uc-m3-02-profit-margin.md).
-**Prototype:** UC-M2-01 rule-based recommendation API/UI; UC-M2-02 analysis core,
-default-denied integration API and isolated fixture UI. General natural-language
-recommendation and authenticated current-stock integration remain incomplete.
-**Not implemented:** UC-M1-02 stock lookup and the other remaining use cases.
-Shared `products` and `sales` tables with prototype data exist; inventory tables,
-repositories and agent behaviour do not. The app has no authentication, checkout,
-payment or public-hosting setup.
+**Connected:** request capture, stock lookup, limited rule-based recommendations,
+restocking priorities, profit margins, AUD budget filtering and availability.
+**Missing implementations:** low-stock alerts, reorder suggestions and demand
+trends. [Team status](docs/team-status.md) distinguishes scope and contribution.
+Shared products, sales, inventory and inventory-item tables contain labelled
+prototype data. Operator endpoints require the private token; the app remains
+localhost-only with no public account system.
 
 ### Always read Stage 1 first
 
@@ -336,10 +332,9 @@ the store-level Inventory. SalesRecord holds completed-sales evidence.
 Schemas alone do not enforce database foreign keys or the one-inventory rule.
 
 Customer/Business Insights agents must obtain inventory through
-`InventoryQueryService`, not direct SQL. The current outline is **not ready as a
-complete stock contract**: authorization context and found/not-found/stale/error
-results still need implementing from the detailed written use case.
-Following the detailed text is agreed; stock lookup itself is not supplied.
+`InventoryQueryService`, not direct SQL. The implemented contract includes trusted
+requester context and found/not-found/stale/error results, plus a compatibility
+single-ID overload. See the [stock reference](docs/uc-m1-02-stock-lookup.md).
 
 ### Current API contract
 
@@ -474,7 +469,8 @@ Never post `.env`, authentication headers, keys or credential screenshots.
 - Stock lookup is implemented on this branch with operator authorisation and
   found/not-found/stale/error results. Existing stock is a labelled prototype
   snapshot, not a real store feed; timestamps are never refreshed on restart.
-- No authentication: keep the app local.
+- Operator endpoints use a private token. Customer workflows use saved random
+  request IDs; public multi-user authentication is not implemented. Keep the app local.
 - Linux ARM64 is the tested platform. Mac/Windows-WSL teammate onboarding remains unverified.
 - This is not an offline dependency bundle. Locked stable releases reduce variation,
   but no README can guarantee zero errors on every computer.

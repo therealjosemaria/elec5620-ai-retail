@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { DrinkRecommendations } from "./Member2";
+import { CustomerTools } from "./CustomerTools";
 
 type Status = {
   mode: "fixture" | "live"; live_attempts_today: number; local_daily_limit: number;
@@ -78,6 +79,10 @@ export function CustomerWorkspace() {
         <button disabled={busy || !text.trim() || !status || (status.mode === "live" && !status.live_configured)}>
           {busy ? "Capturing…" : "Capture and save"}
         </button>
+        <button type="button" className="secondary" disabled={busy} onClick={() => {
+          setAttempt(null); setSaved(null); setText(""); setError("");
+          sessionStorage.removeItem("captureAttempt"); localStorage.removeItem("lastRequestId");
+        }}>Start a new request</button>
       </div>
       <small>Up to 1,500 characters. One live call per new attempt; no automatic retries.</small>
     </form>
@@ -92,6 +97,7 @@ export function CustomerWorkspace() {
       <small>Request ID: {saved.request_id}<br />Saved: {saved.created_at}</small>
       <details><summary>Inspect stored record</summary><pre>{JSON.stringify(saved, null, 2)}</pre></details>
     </section>}
-    {saved && <DrinkRecommendations key={saved.request_id} requestId={saved.request_id} />}
+    {saved && <DrinkRecommendations key={`recommendations-${saved.request_id}`} requestId={saved.request_id} />}
+    <CustomerTools key={`tools-${saved?.request_id ?? "no-request"}`} requestId={saved?.request_id ?? null}/>
   </div>;
 }

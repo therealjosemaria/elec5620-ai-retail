@@ -7,7 +7,7 @@ type Recommendation = {
     sweetness: string; flavour_tags: string[];
   } }[];
 };
-type Restocking = {
+export type Restocking = {
   outcome: string; generated_at: string; data_mode: string; ranking_basis: string;
   sales_start_date: string | null; sales_end_date: string | null; limitations: string[];
   priorities: { product_id: string; product_name: string; rank: number; stock_quantity: number;
@@ -44,7 +44,7 @@ export function DrinkRecommendations({ requestId }: { requestId: string }) {
       {result.recommendations.map(item => <article className="product-card" key={item.product.product_id}>
         <h3>Rank {item.rank} · {item.product.name}</h3>
         <p>{item.product.category} · ABV {item.product.abv}% · {item.product.sweetness}</p>
-        <p>Catalogue price: {item.product.price} · {item.product.flavour_tags.join(", ") || "No flavour tags"}</p>
+        <p>Catalogue price: AUD {item.product.price} · {item.product.flavour_tags.join(", ") || "No flavour tags"}</p>
         <p>{item.explanation}</p><small>Product ID: {item.product.product_id}</small>
       </article>)}
     </div>}

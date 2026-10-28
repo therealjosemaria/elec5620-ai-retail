@@ -1,5 +1,10 @@
 # Unified three-agent interface
 
+**28 October integration update:** stock, availability, AUD budget filtering,
+profit margins and connected restocking are now wired into these workspaces.
+The original table below records the earlier UI implementation; current status
+and remaining three unimplemented functions are tracked in `team-status.md`.
+
 ## Scope and report mapping
 
 Built locally on 27 October 2026 in the existing React/Vite application. Source:

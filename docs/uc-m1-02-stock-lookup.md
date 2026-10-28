@@ -31,8 +31,8 @@ service instance has a fixed requester and an authorization callback. Requests
 claiming a different requester are denied before opening SQLite. Internal caller
 wiring must authenticate and authorize the actual caller before granting access.
 The single-ID overload is retained to avoid breaking Cedar's restocking module.
-Avan's current availability module has a separate evidence shape; connecting it
-to this result requires an explicit adapter, not a direct type substitution.
+Avan's availability module has a separate evidence shape. `team_workflows.py`
+now provides an explicit adapter from shared lookup outcomes to that shape.
 
 ## Operator setup and API
 
@@ -111,6 +111,6 @@ margin (already main) and inventory proposal, Cedar's earlier M2 branch through
 its latest unified-UI descendant, and Avan's budget/availability branch. Original
 commits and authors are retained. No remote branches were deleted.
 
-Backend modules existing on main are not automatically wired into every UI tab.
-Budget/availability/profit screens and the remaining members' functions must be
-connected or implemented explicitly, with their own report-based acceptance.
+The subsequent team workflow integration connects budget/availability/profit
+screens and shared-data restocking. See `team-status.md` for current coverage
+and the three remaining missing implementations.
