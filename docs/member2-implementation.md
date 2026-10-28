@@ -1,5 +1,12 @@
 # Member 2 implementation and demonstration
 
+**28 October integration update:** the existing recommendation API feeds Avan's
+budget and availability stages. Restocking now also has an authenticated shared
+SQLite inventory/sales connection through InventoryQueryService. The original
+isolated fixture demonstration remains separately labelled. The bounded phrase
+matcher remains a prototype; broader interpretation is still pending.
+See `team-status.md` for current routes, scope and joint test instructions.
+
 ## Source and ownership
 
 On 27 October 2026 the user confirmed that the local

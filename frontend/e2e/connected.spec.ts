@@ -1,0 +1,51 @@
+import { test, expect } from "@playwright/test";
+
+test("Customer capture → recommendations → budget → availability", async ({page}) => {
+  await page.goto("/#assistant");
+  await page.getByRole("button", {name: "Use sample"}).click();
+  await page.getByRole("button", {name: "Capture and save"}).click();
+  await page.getByRole("heading", {name: "Saved in SQLite"}).waitFor();
+  await page.getByRole("button", {name: "Recommend drinks"}).click();
+  await expect(page.getByRole("region", {name: "Drink recommendations"}).getByRole("heading", {name: /Pinot Noir/})).toBeVisible();
+  await page.getByRole("button", {name: "Apply budget filter"}).click();
+  const tools = page.getByRole("region", {name: "Budget and availability"});
+  await expect(tools.getByRole("status")).toContainText("AUD 30");
+  await expect(tools.getByRole("heading", {name: "Shiraz 750ml"})).toBeVisible();
+  await expect(tools.getByRole("heading", {name: "Pinot Noir 750ml"})).toHaveCount(0);
+  await page.getByRole("button", {name: "Check filtered availability"}).click();
+  await expect(tools.getByRole("heading", {name: "product-001: Available"})).toBeVisible();
+  await page.setViewportSize({width: 390, height: 844});
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("Operator availability → connected priorities → profit coverage", async ({page}) => {
+  await page.goto("/#inventory");
+  await page.getByRole("tab", {name: /Availability/}).click();
+  await page.getByLabel("Operator token", {exact: true}).fill("fixture-test-operator");
+  await page.getByLabel(/Moscato 750ml/).check();
+  await page.getByLabel(/Pale Ale 6-pack/).check();
+  await page.getByRole("button", {name: "Check selected availability"}).click();
+  await expect(page.getByRole("heading", {name: "Availability results"})).toBeVisible();
+  await expect(page.locator("#inventory-panel tbody")).toContainText("Unavailable");
+  await expect(page.locator("#inventory-panel tbody")).toContainText("Unknown");
+  await page.getByRole("link", {name: "Business insights", exact: true}).click();
+  const restock = page.getByRole("region", {name: "Connected restocking priorities"});
+  await restock.getByLabel("Business access token").fill("fixture-test-operator");
+  await restock.getByLabel("Analysis product").selectOption("product-003");
+  await restock.getByRole("button", {name: "Review connected priorities"}).click();
+  await expect(restock.getByRole("status")).toHaveText("Analysis result: presented");
+  await expect(restock.getByRole("heading", {name: /Sauvignon Blanc/})).toBeVisible();
+  await page.getByRole("tab", {name: /Profit margins/}).click();
+  const profit = page.getByRole("region", {name: "Connected profit margins"});
+  await profit.getByLabel("Business access token").fill("wrong");
+  await profit.getByLabel("Analysis product").selectOption("product-002");
+  await profit.getByRole("button", {name: "Review profit margins"}).click();
+  await expect(profit.getByRole("alert")).toContainText("Operator access denied");
+  await profit.getByLabel("Business access token").fill("fixture-test-operator");
+  await profit.getByRole("button", {name: "Review profit margins"}).click();
+  await expect(profit.getByRole("status")).toHaveText("Analysis result: partial");
+  await expect(profit.getByText(/cost is missing/)).toBeVisible();
+  await page.setViewportSize({width: 390, height: 844});
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({path: "test-results/connected-profit-mobile.png", fullPage: true});
+});

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Product } from "./Catalogue";
+import type { Availability } from "./api";
 
 type StockResult = {
   product_id: string; status: "found" | "not_found" | "stale" | "error";
@@ -7,10 +8,10 @@ type StockResult = {
   reason: string | null;
 };
 
-export function StockLookup({ products, error }: {products: Product[]; error: string}) {
+export function StockLookup({ products, error, availability = false }: {products: Product[]; error: string; availability?: boolean}) {
   const [token, setToken] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
-  const [results, setResults] = useState<StockResult[] | null>(null);
+  const [results, setResults] = useState<(StockResult | Availability)[] | null>(null);
   const [failure, setFailure] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -20,7 +21,7 @@ export function StockLookup({ products, error }: {products: Product[]; error: st
     if (!selected.length) { setFailure("Select at least one product."); return; }
     setBusy(true); setFailure(""); setResults(null);
     try {
-      const response = await fetch("/api/inventory/lookup", {
+      const response = await fetch(availability ? "/api/inventory/availability" : "/api/inventory/lookup", {
         method: "POST", headers: {"Content-Type": "application/json", Authorization: `Bearer ${token}`},
         body: JSON.stringify({product_ids: selected}),
       });
@@ -32,7 +33,7 @@ export function StockLookup({ products, error }: {products: Product[]; error: st
   }
 
   return <section aria-labelledby="stock-title" className="inventory-list">
-    <h3 id="stock-title">Check current stock</h3>
+    <h3 id="stock-title">{availability ? "Check product availability" : "Check current stock"}</h3>
     <p>Prototype inventory snapshot. Quantities are sample data; source timestamps are preserved and stale records stay labelled.</p>
     <form onSubmit={lookup} className="stock-form">
       <label htmlFor="operator-token">Operator token</label>
@@ -49,15 +50,16 @@ export function StockLookup({ products, error }: {products: Product[]; error: st
             }}/><span>{p.name} <small>{p.product_id}</small></span>
         </label>)}
       </fieldset>}
-      <button type="submit" disabled={busy || !products.length}>{busy ? "Checking stock…" : "Check selected stock"}</button>
+      <button type="submit" disabled={busy || !products.length}>{busy ? "Checking…" : availability ? "Check selected availability" : "Check selected stock"}</button>
     </form>
     {failure && <p role="alert" className="error">{failure}</p>}
-    {results && <div aria-live="polite"><h3>Stock lookup results</h3>
+    {results && <div aria-live="polite"><h3>{availability ? "Availability results" : "Stock lookup results"}</h3>
       <div className="table-scroll stock-results" tabIndex={0} aria-label="Stock results table; scroll horizontally for all columns"><table>
-        <thead><tr><th>Product</th><th>Status</th><th>Quantity</th><th>Threshold</th><th>Source updated</th><th>Detail</th></tr></thead>
+        <thead><tr><th>Product</th><th>Status</th><th>Quantity</th>{!availability && <th>Threshold</th>}<th>Source updated</th><th>Detail</th></tr></thead>
         <tbody>{results.map(row => <tr key={row.product_id}>
-          <td>{row.product_id}</td><td>{row.status}</td><td>{row.item?.stock_quantity ?? "Unknown"}</td>
-          <td>{row.item?.reorder_threshold ?? "Unknown"}</td><td>{row.item?.last_updated ?? "Unknown"}</td>
+          <td>{row.product_id}</td><td>{row.status}</td><td>{("item" in row ? row.item?.stock_quantity : row.stock_quantity) ?? "Unknown"}</td>
+          {!availability && <td>{"item" in row ? row.item?.reorder_threshold ?? "Unknown" : "Unknown"}</td>}
+          <td>{("item" in row ? row.item?.last_updated : row.last_updated) ?? "Unknown"}</td>
           <td>{row.reason ?? "Current record returned."}</td>
         </tr>)}</tbody>
       </table></div>

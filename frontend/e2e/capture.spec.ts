@@ -27,4 +27,10 @@ test("fixture errors are visible and do not create a record", async ({ page }) =
   await page.getByRole("button", { name: "Capture and save" }).click();
   await expect(page.getByRole("alert")).toContainText("Fixture mode accepts only");
   await expect(page.getByRole("heading", { name: "Saved in SQLite" })).toHaveCount(0);
+  await page.getByRole("button", {name: "Start a new request"}).click();
+  await expect(page.getByLabel("What are you looking for?")).toHaveValue("");
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await page.getByRole("button", {name: "Use sample"}).click();
+  await page.getByRole("button", {name: "Capture and save"}).click();
+  await expect(page.getByRole("heading", {name: "Saved in SQLite"})).toBeVisible();
 });

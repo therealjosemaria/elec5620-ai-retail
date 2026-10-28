@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Bottle, Catalogue, type Product } from "./Catalogue";
 import { CustomerWorkspace } from "./CustomerWorkspace";
-import { CustomerPendingTools, InsightsWorkspace, InventoryWorkspace } from "./Operations";
+import { InsightsWorkspace, InventoryWorkspace } from "./Operations";
 import "./style.css";
 
 type Page = "discover" | "assistant" | "inventory" | "insights";
@@ -64,9 +64,9 @@ function App() {
         <Catalogue products={products} loading={loading} error={error}/>
         <section className="editorial-note"><p className="eyebrow">THOUGHTFUL BY DESIGN</p><h2>Three perspectives.<br/><em>One considered experience.</em></h2><p>Choose with the Customer Agent. Review stock with Inventory & Procurement. Explore the evidence with Business Insights.</p><a className="text-link" href="#insights">Explore the workspace ↗</a></section>
       </>}
-      <div hidden={page !== "assistant"}><CustomerWorkspace/><CustomerPendingTools/></div>
+      <div hidden={page !== "assistant"}><CustomerWorkspace/></div>
       <div hidden={page !== "inventory"}><InventoryWorkspace products={products} error={error}/></div>
-      <div hidden={page !== "insights"}><InsightsWorkspace mode={mode}/></div>
+      <div hidden={page !== "insights"}><InsightsWorkspace mode={mode} products={products}/></div>
     </main>
     <footer className="site-footer"><div><a className="wordmark" href="#discover">THE STILL<span>SPIRITS, WITH INSIGHT.</span></a><p>AI Multi-Agent Alcohol Retail · University prototype</p></div>
       <div><span>Customer · Inventory · Business</span><p>Sample data is labelled. Unconnected services stay explicit.</p></div>
