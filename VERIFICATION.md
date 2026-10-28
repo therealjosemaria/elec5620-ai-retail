@@ -310,3 +310,40 @@ Agile preparation includes a 14-item importable backlog and blank meeting-log
 template linked to the owner's existing KAN board. The Atlassian connector still
 returns an access/service error; no issues, sprint, historical meeting records or
 burndown data were created. Alert, reorder and demand UCs remain unimplemented.
+
+## Unlimited university primary and outage fallback — 28 October 2026
+
+PR #5 was merged to main at the owner's request. The subsequent policy change
+sets `LIVE_DAILY_LIMIT=unlimited` by default and in the owner's private preview.
+Status returns a null application cap and React explicitly says there is no daily
+application cap. This cannot remove university-enforced quotas. Numeric caps are
+still opt-in for isolated tests; no cap automatically selects local Qwen.
+
+Every new operation tries university first. Connection failures, timeouts, HTTP
+408/429, 5xx server responses or explicit quota rejection permit one local
+fallback. Authentication/permission errors without a quota code, wrong endpoints,
+request schema failures, truncation and invalid output do not. The next operation
+tries university again; historical day-long quota-state rows are ignored. Saved
+recommendations are still reused and neither provider is automatically retried.
+
+**230 mocked/fixture backend tests passed**, including unlimited operation above
+the old 50-attempt cap, ignoring old quota latches, one-shot outage fallback,
+university recovery on the next operation, terminal local failure and no fallback
+on invalid output. Production build and **11 fixture browser tests passed**.
+Outage scenarios were mocked; the live university tunnel was reachable.
+
+A **fresh live React test passed** with actual university capture and recommendation
+generation, budget filtering, Customer → Inventory → Customer handoffs, saved
+trace, cached repeated workflow, GET readback and browser reload. Request
+`1cca1bbd-aa78-40ff-9c64-9bab0b5ef659`; saved workflow
+`3e6ec5f7-93d7-48a5-a5dd-2609394bf307`. Exactly **two new university application
+attempts** were recorded; repeated workflow and reload added zero. Both operations
+used university Qwen. Outcome was partial because catalogue occasion/party-size
+suitability is unknown. This resolves the earlier fresh-generation verification
+gap for this representative input, not arbitrary-input model accuracy.
+
+The real preview's Business Insights restocking form also passed an authenticated
+browser check: product-003 produced a presented result and visible Business
+Insights → Inventory → Business Insights trace, workflow
+`13f72b38-59b1-4eab-8fc8-6263c7b65c7e`. University usage did not increase. The
+private operator token was supplied only through process memory, not output.

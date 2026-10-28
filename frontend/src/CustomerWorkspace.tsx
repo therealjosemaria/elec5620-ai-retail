@@ -4,7 +4,7 @@ import { CustomerTools } from "./CustomerTools";
 import { CustomerWorkflow } from "./CustomerWorkflow";
 
 type Status = {
-  mode: "fixture" | "live"; live_attempts_today: number; local_daily_limit: number;
+  mode: "fixture" | "live"; live_attempts_today: number; local_daily_limit: number | null;
   live_configured: boolean; sample: string;
   selected_provider?: string;
 };
@@ -68,7 +68,9 @@ export function CustomerWorkspace() {
     </header>
     <section className="notice" aria-label="Model status">
       <strong>{status?.mode === "live" ? status.selected_provider === "local" ? "Live · local Qwen fallback" : "Live · campus-qwen" : "Fixture mode · no AI calls"}</strong>
-      <p>{status ? `${status.live_attempts_today} / ${status.local_daily_limit} university attempts recorded today (UTC). Provider quota is separate.` : "Connecting to backend…"}</p>
+      <p>{status ? status.local_daily_limit === null
+        ? `${status.live_attempts_today} university attempts recorded today (UTC). No application daily cap; provider limits still apply.`
+        : `${status.live_attempts_today} / ${status.local_daily_limit} university attempts recorded today (UTC). Provider quota is separate.` : "Connecting to backend…"}</p>
       {status?.mode === "fixture" && <p>Only the fixed sample works in this mode. This validates the pipeline, not AI quality.</p>}
       {status?.mode === "live" && !status.live_configured && status.selected_provider !== "local" && <p>Backend API key is missing. Configure it privately before using live mode.</p>}
     </section>

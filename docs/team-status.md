@@ -43,8 +43,9 @@ all Stage 2 assessment requirements or unrestricted model accuracy are complete.
 
 PR #2 integrated all earlier contributor branches while retaining authors and
 history. PR #3 merged UC-M1-02. Main remains pull-request-only with no bypass list.
-PR #4 merged the cross-feature connections. Current branch `feat/qwen-agent-workflows`
-adds Qwen recommendations, caching, actual agent handoffs and optional quota fallback.
+PR #4 merged the cross-feature connections. PR #5 merged Qwen recommendations,
+caching, actual agent handoffs and optional local fallback. The university remains
+primary with no application daily cap; local Qwen handles service unavailability.
 
 ## Shared decisions and boundaries
 

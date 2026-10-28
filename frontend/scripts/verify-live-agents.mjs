@@ -15,7 +15,7 @@ async function read(path, options) {
 const before = await read("/api/status");
 assert.equal(before.mode, "live");
 assert.ok(before.live_configured);
-assert.ok(before.local_daily_limit - before.live_attempts_today >= plannedCalls);
+assert.ok(before.local_daily_limit === null || before.local_daily_limit - before.live_attempts_today >= plannedCalls);
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage();
@@ -46,9 +46,14 @@ try {
   assert.ok(["complete", "partial", "no_match"].includes(report.outcome));
   assert.equal(report.recommendations.mode, "live");
   assert.equal(report.recommendations.method, "campus_qwen_catalogue_recommendation");
+  assert.equal(report.recommendations.model_provider, "university");
   assert.equal(report.recommendations.cache_hit, Boolean(existingId));
   assert.equal(report.recommendations.outcome, "complete");
   assert.ok(report.recommendations.recommendations.length);
+  assert.ok(report.budget.products.length, "Sample must have an in-budget candidate");
+  assert.ok(report.availability.length, "Inventory Agent must return actual availability evidence");
+  assert.ok(report.trace.some(step => step.sender === "customer_agent" && step.receiver === "inventory_procurement_agent"));
+  assert.ok(report.trace.some(step => step.sender === "inventory_procurement_agent" && step.receiver === "customer_agent"));
   const saved = await read(`/api/requests/${request.request_id}/recommendations`);
   assert.equal(saved.cache_hit, true);
   assert.deepEqual(saved.recommendations, report.recommendations.recommendations);

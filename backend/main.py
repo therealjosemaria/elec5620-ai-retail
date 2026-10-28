@@ -154,8 +154,9 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
     if selected_mode not in ("fixture", "live"):
         raise ValueError("MODEL_MODE must be fixture or live.")
     path = Path(db_path or os.getenv("DATABASE_PATH", str(ROOT / "data/retail.sqlite3")))
-    limit = int(daily_limit if daily_limit is not None else os.getenv("LIVE_DAILY_LIMIT", "5"))
-    if limit < 0:
+    configured_limit = daily_limit if daily_limit is not None else os.getenv("LIVE_DAILY_LIMIT", "unlimited")
+    limit = None if str(configured_limit).lower() == "unlimited" else int(configured_limit)
+    if limit is not None and limit < 0:
         raise ValueError("LIVE_DAILY_LIMIT must be nonnegative.")
     stock_token = operator_token if operator_token is not None else os.getenv("OPERATOR_TOKEN", "")
 
@@ -235,7 +236,7 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
         today = datetime.now(timezone.utc).date().isoformat()
         with connect() as db:
             used = db.execute("SELECT count(*) FROM attempts WHERE mode='live' AND day=?", (today,)).fetchone()[0]
-            selected_provider = model_router.choose(db, used, limit) if selected_mode == "live" else "fixture"
+            selected_provider = model_router.choose() if selected_mode == "live" else "fixture"
         return {"mode": selected_mode, "model": "campus-qwen",
                 "selected_provider": selected_provider, "local_fallback_enabled": model_router.enabled,
                 "local_model": os.getenv("LOCAL_QWEN_MODEL", "local-qwen"),
@@ -475,10 +476,10 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
             if selected_mode == "live":
                 used = db.execute("SELECT count(*) FROM attempts WHERE mode='live' AND day=?", (today,)).fetchone()[0]
                 if extractor is None:
-                    provider = model_router.choose(db, used, limit)
+                    provider = model_router.choose()
                 if provider != "local" and extractor is None and not os.getenv("ELEC5620_API_KEY"):
                     raise HTTPException(503, "Backend API key is not configured.")
-                if used >= limit and provider != "local":
+                if limit is not None and used >= limit:
                     raise HTTPException(429, "Local daily live-call limit reached. No model call was made.")
             db.execute("INSERT INTO attempts VALUES (?, ?, ?, ?, 'pending')",
                        (request_id, digest, "local" if selected_mode == "live" and provider == "local" else selected_mode, today))

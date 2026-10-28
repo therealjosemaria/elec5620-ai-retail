@@ -3,8 +3,9 @@
 **Team integration:** all published contributor branches as of 28 October 2026
 are integrated into `main` through PR #2; PR #3 adds UC-M1-02 stock lookup.
 PR #4 connects budget, availability, profit and restocking modules to the shared
-frontend. Current work adds saved Qwen recommendations, LangGraph handoffs and
-optional local Qwen quota fallback. See the [full UC/contribution status and joint test walkthrough](docs/team-status.md).
+frontend. PR #5 adds saved Qwen recommendations, LangGraph handoffs and optional
+local Qwen fallback. University usage has no application daily cap; local Qwen
+handles service unavailability. See the [full UC/contribution status and joint test walkthrough](docs/team-status.md).
 
 This guide covers first setup, seeing React, daily development, live-model access,
 tests and the team Git workflow. Start with fixture mode; no API key or VPN is
@@ -175,7 +176,7 @@ Use an individual university key when available. A local `.env` should contain:
 MODEL_MODE=live
 ELEC5620_API_KEY=REPLACE_PRIVATELY_WITH_YOUR_KEY
 ELEC5620_BASE_URL=http://10.167.60.148:8000/v1
-LIVE_DAILY_LIMIT=5
+LIVE_DAILY_LIMIT=unlimited
 DATABASE_PATH=data/retail.sqlite3
 ```
 
@@ -217,8 +218,8 @@ Teammates running locally should use the direct university URL, **not port 18000
 
 We do not yet know the university's numerical quota. Local safeguards:
 
-- Default cap: **5 attempted university operations per UTC day**, shared by capture
-  and recommendations, persisted in SQLite. The owner's private cap is 50.
+- There is **no application daily cap** by default (`LIVE_DAILY_LIMIT=unlimited`).
+  University-enforced limits still apply; attempts remain counted in SQLite.
 - Capture and recommendations each reserve one operation per request ID; duplicate
   submissions and saved recommendation reads do not regenerate output.
 - No SDK retries, no graph retry policy, no automatic JSON repair calls.
@@ -226,10 +227,10 @@ We do not yet know the university's numerical quota. Local safeguards:
   capture and 4,096 for recommendations; university timeout is 30 seconds.
   The ceiling is not a fixed token spend. Truncated responses are rejected with
   an explicit output-limit error and no automatic retry.
-- Failed calls count conservatively toward the local cap.
+- Failed calls remain counted. A numeric cap can be set explicitly for isolated tests.
 - The UI shows attempted live calls; it is not a provider balance/token dashboard.
-- Do not delete the database to reset the allowance. Different database copies have
-  independent limits; calls made through other apps/team members are not counted here.
+- Preserve the database for saved results and usage history. Calls made through
+  other apps/team members are not counted here.
 
 If a timeout or malformed response occurs, no CustomerRequest is saved and an error
 is shown. Reusing that attempt ID never calls the model again. Editing the input
@@ -239,8 +240,9 @@ or edited input creates a new ID; after an uncertain network failure, check the
 saved record/database before submitting again.
 
 The optional [local Qwen fallback](docs/local-qwen-fallback.md) uses an existing
-localhost service when the university returns an explicit quota error or the
-application's university cap is reached. Start the runtime and enable it privately;
+localhost service when university Qwen is unreachable, times out, returns a server
+error or rejects a call for rate/quota capacity. New operations always try university
+first. Start the runtime and enable it privately;
 teammates can leave it disabled. Records show the actual provider/model. Local-only
 operations do not consume university allowance. Failed validation never silently
 becomes a fixture result. See [Agile setup](docs/agile/README.md) for the team's

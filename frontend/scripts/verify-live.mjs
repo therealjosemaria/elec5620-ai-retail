@@ -13,7 +13,7 @@ const base = process.env.LIVE_TEST_URL || "http://127.0.0.1:8002";
 const status = await (await fetch(`${base}/api/status`)).json();
 assert.equal(status.mode, "live");
 assert.ok(status.live_configured, "Backend key missing");
-assert.ok(status.local_daily_limit - status.live_attempts_today >= plannedCalls, "Insufficient local allowance");
+assert.ok(status.local_daily_limit === null || status.local_daily_limit - status.live_attempts_today >= plannedCalls, "Insufficient local allowance");
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage();
