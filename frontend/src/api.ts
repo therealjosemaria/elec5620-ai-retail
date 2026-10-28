@@ -9,4 +9,3 @@ export type Availability = {
   product_id: string; status: "Available" | "Unavailable" | "Unknown";
   stock_quantity: number | null; last_updated: string | null; reason: string;
 };
-
