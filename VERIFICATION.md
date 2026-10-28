@@ -250,3 +250,63 @@ in addition to the earlier shared-model and stock references. The app still uses
 prototype data, a limited rule recommendation matcher and localhost-only access.
 Low-stock alerts, reorder suggestions and demand trends remain unimplemented.
 `docs/team-status.md` provides the full use-case and contributor overview.
+
+## Qwen recommendations, LangGraph and local fallback — 28 October 2026
+
+Implemented real Qwen catalogue ranking with strict product/need/fact validation,
+durable at-most-once recommendation reservations, saved-result reuse, and persisted
+Customer → Inventory and Business Insights → Inventory LangGraph traces. Capture
+remains a separate use case. Optional quota fallback uses the server's existing
+Qwen2.5-1.5B-Instruct Q4_K_M through llama.cpp, bound to localhost with two CPU
+threads and one inference slot. No weights/runtime were downloaded or committed.
+
+**220 backend tests passed**, with mocked/fixture providers and intercepted SDK
+requests; production TypeScript/Vite build and **11 fixture browser tests passed**.
+Coverage includes concurrency, restarts, failed/pending reservations, quota-only
+fallback, provider provenance, shared university cap, saved no-match, changed
+prices, offline revalidation, actual typed handoffs and protected business traces.
+The React review checked hook dependencies, asynchronous restore guards, accessible
+labels/statuses and stable product keys. These checks do not establish AI accuracy.
+
+University checks used **seven application attempts**: three capture/recommendation
+pairs and one schema-rejected capture request. One recommendation truncated; a
+second failed validation before raw retention was added. The third response had
+valid products/facts but unsupported uncertainty labels. The transport now sends
+only legacy `max_tokens` (the proxy rejected both token fields together), with
+2,048 capture / 4,096 recommendation ceilings, temperature 0.2, JSON mode and zero
+automatic retries. Unknown uncertainty references are withheld; invalid product,
+need or fact references still reject the result.
+
+The retained third university response was revalidated explicitly offline after
+that validator fix, with **zero additional model calls**. Request
+`302cdd78-b3c5-4eff-818b-b77626d663fd` then passed the live-browser cache-only
+workflow, repeated workflow, GET readback and reload check with **zero new university
+attempts** (saved workflow `7816bbf2-cc2f-481d-a2ca-a615a987f229`). Outcome was
+partial because the catalogue cannot establish occasion/party-size suitability.
+This verifies actual university-generated recommendations plus reuse; a fresh
+generation after the final prompt/validator changes was not retested against the
+university. The counter is not a university token/balance measurement.
+
+Actual local inference passed a JSON transport check and grounded recommendation
+check (one direct recommendation took 9.61 seconds). An isolated backend with
+`LIVE_DAILY_LIMIT=0` then completed actual local capture → recommendations → budget
+→ inventory → saved trace, followed by cached rerun: **39.8 seconds**, **zero
+university calls**, request `a3d110cd-d8e3-4780-b090-ed0020396871`, workflow
+`df0a04bf-aa7e-4029-ae15-6c95852f778a`. Earlier local captures paraphrased numbers
+and were rejected; removing numeric examples from the extraction prompt produced
+source-valid output. The successful sample still omitted an explicit constraint,
+so complete extraction quality is not established. The full local sample does not
+meet the provisional 10-second target. Both providers retain the same validators;
+local failure never silently becomes fixture output.
+
+The owner's private preview enables local fallback while retaining the university
+as primary. The checked-in example leaves it disabled for teammates. Explicit
+quota codes or the application cap select fallback; authentication, connection,
+generic rate-limit and validation failures do not. No model calls occur on reload
+or saved-result reads. A quota rejection can cause one university request followed
+by one local request in the same reserved operation; neither provider is retried.
+
+Agile preparation includes a 14-item importable backlog and blank meeting-log
+template linked to the owner's existing KAN board. The Atlassian connector still
+returns an access/service error; no issues, sprint, historical meeting records or
+burndown data were created. Alert, reorder and demand UCs remain unimplemented.

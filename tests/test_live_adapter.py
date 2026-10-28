@@ -42,9 +42,10 @@ def test_live_adapter_requests_json_without_retries(monkeypatch):
     text = "Red wine, budget either $20 or $40."
     assert live_extract(text) == output
     assert observed["binding"] == {"response_format": {"type": "json_object"}}
-    assert observed["settings"]["temperature"] == 0
+    assert observed["settings"]["temperature"] == 0.2
     assert observed["settings"]["max_retries"] == 0
-    assert observed["settings"]["max_tokens"] == 2048
+    assert observed["settings"]["max_tokens"] is None
+    assert observed["settings"]["extra_body"]["max_tokens"] == 2048
     assert observed["calls"] == 1
     assert observed["messages"][-1].content == text
     assert "Be succinct and professional" in observed["messages"][0].content

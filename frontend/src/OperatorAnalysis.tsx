@@ -2,6 +2,7 @@ import { useState } from "react";
 import { readApi } from "./api";
 import type { Product } from "./Catalogue";
 import type { Restocking } from "./Member2";
+import { AgentTrace, type AgentEvent } from "./AgentTrace";
 
 type Profit = {
   outcome: string; revenue: string | null; total_cost: string | null;
@@ -17,7 +18,7 @@ export function OperatorAnalysis({kind, products}: {kind: "restocking" | "profit
   const [category, setCategory] = useState("Wine");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
-  const [result, setResult] = useState<Restocking | Profit | null>(null);
+  const [result, setResult] = useState<((Restocking | Profit) & {workflow_id: string; trace: AgentEvent[]}) | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const prefix = `analysis-${kind}`;
@@ -33,7 +34,7 @@ export function OperatorAnalysis({kind, products}: {kind: "restocking" | "profit
       if (start) body.start_date = start;
       if (end) body.end_date = end;
     }
-    try {setResult(await readApi<Restocking | Profit>(kind === "profit" ? "/api/profit-margins" : "/api/restocking-priorities", {
+    try {setResult(await readApi<(Restocking | Profit) & {workflow_id: string; trace: AgentEvent[]}>(kind === "profit" ? "/api/profit-margins" : "/api/restocking-priorities", {
       method: "POST", headers: {"Content-Type": "application/json", Authorization: `Bearer ${token}`},
       body: JSON.stringify(body),
     }));}
@@ -80,6 +81,7 @@ export function OperatorAnalysis({kind, products}: {kind: "restocking" | "profit
       </> : <><p>{result.ranking_basis}</p>{result.priorities.map(p => <article className="product-card" key={p.product_id}>
         <h3>Priority {p.rank} · {p.product_name}</h3><p>{p.explanation}</p><p>Inventory updated: {p.last_updated}</p>
       </article>)}<small>Completed sales: {result.sales_start_date ?? "Unknown"} – {result.sales_end_date ?? "Unknown"} · {result.data_mode}</small></>}
+      <AgentTrace trace={result.trace} workflowId={result.workflow_id}/>
     </div>}
   </section>;
 }

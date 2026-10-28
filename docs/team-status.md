@@ -10,17 +10,17 @@ it does not assess work performed outside the fetched repository.
 | --- | --- | --- | --- |
 | M1 / Jose | UC-M1-01 | Submit Product Assistance Request | Connected: React, campus-qwen extraction, validation, saved request and downstream inbox. Historical live verification; current combined tests use fixtures. |
 | M1 / Jose | UC-M1-02 | Check Current Stock | Connected: operator token, batch lookup, exact source values, found/not-found/stale/error statuses, read-only storage. Merged through PR #3. |
-| M2 / Cedar | UC-M2-01 | Receive Drink Recommendations | Connected limited prototype: exact supported phrase matcher, catalogue-grounded explanations and tied ranks. Broader language and occasion/party-size suitability are not implemented. |
+| M2 / Cedar | UC-M2-01 | Receive Drink Recommendations | Connected: Qwen ranks catalogue IDs with validated need/fact references; saved results are reused. Fixtures retain Cedar's matcher. Occasion/party-size suitability remains unresolved without catalogue metadata. |
 | M2 / Cedar | UC-M2-02 | Review Restocking Priorities | Connected: authenticated shared inventory and completed sales, explainable ranks, no-priority and stale/missing-data errors. Original fixed demonstration retained separately in fixture mode. |
 | M3 / Lio (Houyuchen / liou87) | UC-M3-01 | Receive Low-Stock Alert | Missing implementation; visible placeholder only. |
 | M3 / Lio (Houyuchen / liou87) | UC-M3-02 | Review Profit Margins | Connected: authenticated product/category/completed-period analysis, exact decimal calculations, missing-cost exclusions and coverage, no-data and source-error outcomes. |
 | M4 / Avan | UC-M4-01 | Apply Budget Filter | Connected: saved request and recommendation candidates, authorized catalogue prices, preserved order, explicit missing/invalid/foreign-currency budget and no-match results. |
 | M4 / Avan | UC-M4-02 | Check Product Availability | Connected: shared stock adapter, customer recommended/filtered candidates and operator selections; available/unavailable/unknown with source timestamps and limitations. |
-| M5 | UC-M5-01 | Review Reorder Suggestions | Missing implementation; visible placeholder only. |
-| M5 | UC-M5-02 | Detect Demand Trends | Missing implementation; visible placeholder only. |
+| M5 / Lira | UC-M5-01 | Review Reorder Suggestions | Missing implementation; visible placeholder only. |
+| M5 / Lira | UC-M5-02 | Detect Demand Trends | Missing implementation; visible placeholder only. |
 
-Seven use cases have connected implementations; recommendation remains a limited
-prototype. Three implementations have not been found. This is not a claim that
+Seven use cases have connected implementations. Three implementations have not
+been found. Representative model checks are recorded separately; this does not claim
 all Stage 2 assessment requirements or unrestricted model accuracy are complete.
 
 ## Contributions evidenced in Git
@@ -37,13 +37,14 @@ all Stage 2 assessment requirements or unrestricted model accuracy are complete.
   proposal and implementation notes.
 - **Avan / Avan105:** budget-filter and product-availability modules with their
   unit tests. This integration retains those modules and connects their results.
-- **Member 5:** no implementation commits/branches found in the fetched repository
+- **Lira / Member 5:** no implementation commits/branches found in the fetched repository
   at this review. Local, unpushed or differently attributed work may exist; this
   statement does not infer that no work has been done.
 
 PR #2 integrated all earlier contributor branches while retaining authors and
 history. PR #3 merged UC-M1-02. Main remains pull-request-only with no bypass list.
-The next integration branch is `feat/connect-team-workflows`.
+PR #4 merged the cross-feature connections. Current branch `feat/qwen-agent-workflows`
+adds Qwen recommendations, caching, actual agent handoffs and optional quota fallback.
 
 ## Shared decisions and boundaries
 
@@ -64,7 +65,8 @@ The next integration branch is `feat/connect-team-workflows`.
   and age naturally. Restocking's sales snapshot timestamp is the time completed
   rows were read; it is not a fabricated source-modification timestamp.
 - Lookup, budget, availability, restocking and profit operations do not invoke
-  the LLM or alter stock/sales. Only live request capture consumes model allowance.
+  the LLM or alter stock/sales. Live capture and new recommendation generation use
+  models; saved recommendation reuse, arithmetic and inventory reads do not.
 
 ## Joint test walkthrough
 
@@ -91,5 +93,12 @@ Start with fixture mode, so the test makes no university model calls.
    attempt instead of needing an incognito browser window.
 
 Use the README for installation and `VERIFICATION.md` for exact results. The
-university VPN plus reverse model tunnel is needed for live capture only. The
+university VPN plus reverse model tunnel is needed for university capture and
+new university recommendations; local fallback uses the server's own runtime. The
 browser preview uses its separate SSH forward to port 8004.
+
+The [agent workflow guide](agent-workflows.md) describes Customer → Inventory and
+Business Insights → Inventory handoffs and persisted traces. The [Agile guide](agile/README.md)
+links the owner's existing KAN board; connector access is still required to import
+the prepared backlog or configure a sprint. No historical meetings or burndown
+data have been fabricated.

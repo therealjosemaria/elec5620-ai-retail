@@ -23,6 +23,10 @@ class LookupStatus(StrEnum):
     ERROR = "error"
 
 
+class InventorySourceUnavailableError(RuntimeError):
+    pass
+
+
 class Requester(StrEnum):
     CUSTOMER_AGENT = "customer_agent"
     INVENTORY_PROCUREMENT_AGENT = "inventory_procurement_agent"
@@ -92,6 +96,16 @@ class InventoryProcurementAgent:
             raise ValueError("Use a trusted requester and positive freshness duration.")
         self.path, self.requester, self.authorise = Path(path), requester, authorise
         self.max_age, self.clock = max_age, clock
+
+    def check_availability(self, request: InventoryLookupRequest):
+        """Inventory Agent owns classification; other agents receive typed results."""
+        from backend.team_workflows import classify_lookup
+        results = self.lookup_stock(request)
+        if all(r.status == LookupStatus.ERROR and r.reason == "Invalid product identifier." for r in results):
+            raise ValueError("Select valid product identifiers.")
+        if all(r.status == LookupStatus.ERROR and r.reason == "Inventory source unavailable." for r in results):
+            raise InventorySourceUnavailableError("Inventory source unavailable.")
+        return [classify_lookup(result, now=self.clock()) for result in results]
 
     def lookup_stock(self, request: InventoryLookupRequest | str):
         """Single-ID compatibility raises on unresolved evidence; batch returns statuses."""

@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import { DrinkRecommendations } from "./Member2";
 import { CustomerTools } from "./CustomerTools";
+import { CustomerWorkflow } from "./CustomerWorkflow";
 
 type Status = {
   mode: "fixture" | "live"; live_attempts_today: number; local_daily_limit: number;
   live_configured: boolean; sample: string;
+  selected_provider?: string;
 };
 type Saved = {
   request_id: string; text: string; needs: Record<string, string | number | string[] | null>;
   missing_fields: string[]; created_at: string; mode: string;
   outcome: string; message: string;
+  model_provider?: string | null; model_name?: string | null; fallback_reason?: string | null;
 };
 async function api<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, options);
@@ -23,6 +26,7 @@ export function CustomerWorkspace() {
   const [saved, setSaved] = useState<Saved | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [recommendationRefresh, setRecommendationRefresh] = useState(0);
   const [attempt, setAttempt] = useState<{text: string; id: string} | null>(null);
   const refreshStatus = () => api<Status>("/api/status").then(setStatus);
   useEffect(() => {
@@ -63,10 +67,10 @@ export function CustomerWorkspace() {
       <p>Tell us what you like. Explore catalogue matches with a reason behind every recommendation.</p>
     </header>
     <section className="notice" aria-label="Model status">
-      <strong>{status?.mode === "live" ? "Live · campus-qwen" : "Fixture mode · no AI calls"}</strong>
-      <p>{status ? `${status.live_attempts_today} / ${status.local_daily_limit} local live attempts today (UTC). University quota is separate.` : "Connecting to backend…"}</p>
+      <strong>{status?.mode === "live" ? status.selected_provider === "local" ? "Live · local Qwen fallback" : "Live · campus-qwen" : "Fixture mode · no AI calls"}</strong>
+      <p>{status ? `${status.live_attempts_today} / ${status.local_daily_limit} university attempts recorded today (UTC). Provider quota is separate.` : "Connecting to backend…"}</p>
       {status?.mode === "fixture" && <p>Only the fixed sample works in this mode. This validates the pipeline, not AI quality.</p>}
-      {status?.mode === "live" && !status.live_configured && <p>Backend API key is missing. Configure it privately before using live mode.</p>}
+      {status?.mode === "live" && !status.live_configured && status.selected_provider !== "local" && <p>Backend API key is missing. Configure it privately before using live mode.</p>}
     </section>
     <form onSubmit={submit}>
       <label htmlFor="needs">What are you looking for?</label>
@@ -76,7 +80,7 @@ export function CustomerWorkspace() {
       <div className="actions">
         <button type="button" className="secondary" disabled={!status || busy}
           onClick={() => setText(status!.sample)}>Use sample</button>
-        <button disabled={busy || !text.trim() || !status || (status.mode === "live" && !status.live_configured)}>
+        <button disabled={busy || !text.trim() || !status || (status.mode === "live" && !status.live_configured && status.selected_provider !== "local")}>
           {busy ? "Capturing…" : "Capture and save"}
         </button>
         <button type="button" className="secondary" disabled={busy} onClick={() => {
@@ -89,6 +93,7 @@ export function CustomerWorkspace() {
     {error && <p role="alert" className="error">{error}</p>}
     {saved && <section aria-live="polite" className="result">
       <h2>Saved in SQLite</h2><p>Mode: {saved.mode} · Read back from the database</p>
+      {saved.model_provider && <p>Provider: {saved.model_provider.replaceAll("_", " ")}{saved.model_name ? ` · ${saved.model_name}` : ""}{saved.fallback_reason ? ` · ${saved.fallback_reason.replaceAll("_", " ")}` : ""}</p>}
       <p role={saved.outcome === "downstream_unavailable" ? "alert" : "status"}>{saved.message}</p>
       <dl>{Object.entries(saved.needs).map(([key, value]) => <div key={key}>
         <dt>{key.replaceAll("_", " ")}</dt><dd>{Array.isArray(value) ? (value.join(", ") || "Unknown / not stated") : (value ?? "Unknown / not stated")}</dd>
@@ -97,7 +102,11 @@ export function CustomerWorkspace() {
       <small>Request ID: {saved.request_id}<br />Saved: {saved.created_at}</small>
       <details><summary>Inspect stored record</summary><pre>{JSON.stringify(saved, null, 2)}</pre></details>
     </section>}
-    {saved && <DrinkRecommendations key={`recommendations-${saved.request_id}`} requestId={saved.request_id} />}
+    {saved && <CustomerWorkflow key={`workflow-${saved.request_id}`} requestId={saved.request_id} onComplete={() => {
+      setRecommendationRefresh(value => value + 1); refreshStatus().catch(() => {});
+    }}/>}
+    {saved && <DrinkRecommendations key={`recommendations-${saved.request_id}`} requestId={saved.request_id} refresh={recommendationRefresh}
+      onComplete={() => {refreshStatus().catch(() => {});}}/>}
     <CustomerTools key={`tools-${saved?.request_id ?? "no-request"}`} requestId={saved?.request_id ?? null}/>
   </div>;
 }
