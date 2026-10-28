@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Recommendation = {
   outcome: string; limitations: string[];
+  mode: string; method: string; created_at: string; cache_hit: boolean;
+  model_provider: string; model_name: string | null; fallback_reason: string | null;
   recommendations: { rank: number; explanation: string; product: {
     product_id: string; name: string; category: string; price: string; abv: string;
     sweetness: string; flavour_tags: string[];
@@ -21,25 +23,33 @@ async function read<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 // Parent keys this component by saved request ID, preventing results from a previous request.
-export function DrinkRecommendations({ requestId }: { requestId: string }) {
+export function DrinkRecommendations({ requestId, refresh = 0, onComplete }: { requestId: string; refresh?: number; onComplete?: () => void }) {
   const [result, setResult] = useState<Recommendation | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => {
+    let active = true;
+    read<Recommendation>(`/api/requests/${requestId}/recommendations`).then(saved => {if (active) setResult(saved);}).catch(() => {});
+    return () => {active = false;};
+  }, [requestId, refresh]);
   async function run() {
     setBusy(true); setError(""); setResult(null);
-    try { setResult(await read<Recommendation>(`/api/requests/${requestId}/recommendations`)); }
+    try { setResult(await read<Recommendation>(`/api/requests/${requestId}/recommendations`, {method: "POST"})); }
     catch (e) { setError(e instanceof Error ? e.message : "Recommendation failed."); }
-    finally { setBusy(false); }
+    finally { setBusy(false); onComplete?.(); }
   }
   return <section className="result" aria-label="Drink recommendations">
     <p className="eyebrow">Member 2 · UC-M2-01</p>
     <h2>Drink recommendations</h2>
-    <p>Match your saved preferences against the product catalogue. This prototype uses rules and makes no AI calls.</p>
-    <p><small>Supported examples: red wine, white wine, beer, dry, sweet wine, citrus, fruity, no sweet drinks.</small></p>
+    <p>Live mode uses Qwen to rank catalogue products and link them to your stated needs. The result shows which provider answered. Fixture mode uses a fixed rule matcher and makes no AI calls.</p>
+    <p><small>One saved result per customer request. Repeated clicks and page reloads reuse it; failed generation is not retried automatically.</small></p>
     <button type="button" onClick={run} disabled={busy}>{busy ? "Matching…" : "Recommend drinks"}</button>
     {error && <p role="alert" className="error">{error}</p>}
     {result && <div aria-live="polite">
       <p role="status">Recommendation result: {result.outcome.replaceAll("_", " ")}</p>
+      <p>Data: {result.mode} · Method: {result.method.replaceAll("_", " ")} · {result.cache_hit ? "Reused from SQLite" : "Generated and saved"}</p>
+      <p>Provider: {result.model_provider}{result.model_name ? ` · ${result.model_name}` : ""}{result.fallback_reason ? ` · ${result.fallback_reason.replaceAll("_", " ")}` : ""}</p>
+      <small>Saved: {result.created_at}</small>
       <ul>{result.limitations.map(line => <li key={line}>{line}</li>)}</ul>
       {result.recommendations.map(item => <article className="product-card" key={item.product.product_id}>
         <h3>Rank {item.rank} · {item.product.name}</h3>

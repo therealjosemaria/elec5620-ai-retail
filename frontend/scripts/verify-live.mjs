@@ -19,7 +19,7 @@ try {
   const page = await browser.newPage();
   const errors = [];
   page.on("pageerror", e => errors.push(e.message));
-  await page.goto(base);
+  await page.goto(base + "/#assistant");
   const cases = [
     {
       text: "I need dry red wine for a birthday for six people, under fifty dollars, no sweet drinks.",

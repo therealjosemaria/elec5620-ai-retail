@@ -2,8 +2,9 @@
 
 **Team integration:** all published contributor branches as of 28 October 2026
 are integrated into `main` through PR #2; PR #3 adds UC-M1-02 stock lookup.
-This branch connects budget, availability, profit and restocking modules to the
-shared frontend. See the [full UC/contribution status and joint test walkthrough](docs/team-status.md).
+PR #4 connects budget, availability, profit and restocking modules to the shared
+frontend. Current work adds saved Qwen recommendations, LangGraph handoffs and
+optional local Qwen quota fallback. See the [full UC/contribution status and joint test walkthrough](docs/team-status.md).
 
 This guide covers first setup, seeing React, daily development, live-model access,
 tests and the team Git workflow. Start with fixture mode; no API key or VPN is
@@ -19,9 +20,11 @@ needed for the sample demonstration.
 
 Includes **UC-M1-01 / M1-AR-01: Submit Product Assistance Request / User Need Input**.
 React → FastAPI → LangGraph extraction + validation → SQLite → React readback.
-Member 2 adds rule-based catalogue recommendations after capture and an isolated
-restocking-priority demonstration. See [Member 2 implementation](docs/member2-implementation.md)
-for boundaries, supported phrases, API integration and remaining live-model work.
+Member 2 contributed catalogue recommendations and restocking priorities. Live
+recommendations now use Qwen; fixture mode retains the labelled phrase matcher.
+See [agent workflows](docs/agent-workflows.md) for generation, cache and communication
+behaviour, and [Member 2 implementation](docs/member2-implementation.md) for the
+original contribution.
 
 The unified [three-agent interface](docs/unified-interface.md) now opens on a
 catalogue landing page. Use **Customer assistant**, **Inventory & procurement**
@@ -101,6 +104,11 @@ then **Capture and save**.
 The UI performs a separate database GET after saving and restores the saved record after reload.
 Expand **Inspect stored record** to see the database representation.
 Data lives in `data/retail.sqlite3`, excluded from source control.
+
+After capture, choose **Run agent workflow** to run recommendations → budget →
+Inventory Agent availability. Expand **Agent communication** to inspect actual
+handoffs. Repeated runs reuse saved recommendations and refresh stock evidence;
+capture alone remains UC-M1-01. Individual use-case buttons are also available.
 
 Expect budget `30`, party size `6`, preferences/constraints, and status
 `RequestConfirmed`. Expand **Inspect stored record** to compare normalized values
@@ -209,10 +217,13 @@ Teammates running locally should use the direct university URL, **not port 18000
 
 We do not yet know the university's numerical quota. Local safeguards:
 
-- Default cap: **5 attempted live extractions per UTC day**, persisted in SQLite.
-- At most one model invocation per new request ID; duplicate IDs are not re-executed.
+- Default cap: **5 attempted university operations per UTC day**, shared by capture
+  and recommendations, persisted in SQLite. The owner's private cap is 50.
+- Capture and recommendations each reserve one operation per request ID; duplicate
+  submissions and saved recommendation reads do not regenerate output.
 - No SDK retries, no graph retry policy, no automatic JSON repair calls.
-- Input limited to 1,500 characters; completion ceiling 2,048 tokens; timeout 30 seconds.
+- Input limited to 1,500 characters; completion ceilings are 2,048 tokens for
+  capture and 4,096 for recommendations; university timeout is 30 seconds.
   The ceiling is not a fixed token spend. Truncated responses are rejected with
   an explicit output-limit error and no automatic retry.
 - Failed calls count conservatively toward the local cap.
@@ -226,6 +237,14 @@ creates a new attempt; do so deliberately since it may consume another call.
 The attempt ID survives reload in the same tab. A different tab/browser session
 or edited input creates a new ID; after an uncertain network failure, check the
 saved record/database before submitting again.
+
+The optional [local Qwen fallback](docs/local-qwen-fallback.md) uses an existing
+localhost service when the university returns an explicit quota error or the
+application's university cap is reached. Start the runtime and enable it privately;
+teammates can leave it disabled. Records show the actual provider/model. Local-only
+operations do not consume university allowance. Failed validation never silently
+becomes a fixture result. See [Agile setup](docs/agile/README.md) for the team's
+Jira board, prepared backlog and meeting-log template.
 
 ## Extraction contract
 
@@ -260,7 +279,7 @@ server on port 8001 with `data/e2e.sqlite3` and exercise the real compiled React
 API, LangGraph, persistence and reload. Browser downloads need internet.
 Do not run against a live-mode server; the test config starts its own.
 
-The current combined baseline is **190 backend tests and ten browser tests**.
+The current combined baseline is recorded in `VERIFICATION.md`.
 See `VERIFICATION.md` for scope and evidence. Port 8001 must be free. Browser tests always
 start their own fixture backend, even if your development `.env` says live.
 They use the compiled React build, not the Vite development server.
@@ -412,8 +431,8 @@ Resolve conflicts deliberately and rerun tests. Never force-push `main` or use
 GitHub collaborator access is required to push. GitHub authentication is separate
 from your university model key.
 
-**Branch protection and automated CI are not configured by this README.**
-Do not assume GitHub will enforce these practices automatically.
+The repository's `main` branch has a pull-request-only rule with no bypass list.
+Follow the review workflow; this README does not configure CI.
 
 ## Troubleshooting
 
@@ -464,8 +483,11 @@ Never post `.env`, authentication headers, keys or credential screenshots.
 - Number words, correctly grouped thousands and `k` shorthand are supported;
   ranges/alternatives and unsupported ambiguous expressions remain unknown.
 - Evidence checks cannot prove complete or semantically correct model extraction.
-- The capture use case publishes to a durable request inbox consumed by Member 2's
-  rule-based recommendation prototype; a full event-history UI is not included.
+- Capture publishes to a durable request inbox. Live Qwen recommendations and
+  actual LangGraph handoffs are saved and shown in React. Occasion suitability
+  and serving quantities remain unknown because the catalogue lacks that metadata.
+- The optional small local Qwen has different quality and latency; validation
+  can reject its output. It is not a guarantee of university-model equivalence.
 - Stock lookup is implemented on this branch with operator authorisation and
   found/not-found/stale/error results. Existing stock is a labelled prototype
   snapshot, not a real store feed; timestamps are never refreshed on restart.

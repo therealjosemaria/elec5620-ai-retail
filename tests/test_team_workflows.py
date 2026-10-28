@@ -32,14 +32,16 @@ def capture(client, text=SAMPLE):
 
 def dump(path):
     with sqlite3.connect(path) as db:
-        return list(db.iterdump())
+        # Result/trace persistence is intentional; business source rows stay unchanged.
+        return [line for line in db.iterdump() if not any(
+            f'INSERT INTO "{table}"' in line for table in ("recommendation_results", "workflow_runs"))]
 
 
 def test_capture_recommend_filter_availability_share_data_without_additional_model_calls(system):
     client, path, calls = system
     rid = capture(client)
     before = dump(path)
-    rec = client.get(f"/api/requests/{rid}/recommendations").json()
+    rec = client.post(f"/api/requests/{rid}/recommendations").json()
     assert [r["product"]["product_id"] for r in rec["recommendations"]] == ["product-001", "product-002"]
     budget = client.get(f"/api/requests/{rid}/budget-filter")
     assert budget.status_code == 200
@@ -59,6 +61,7 @@ def test_capture_recommend_filter_availability_share_data_without_additional_mod
 def test_foreign_currency_is_not_silently_treated_as_aud(system, currency):
     client, _, _ = system
     rid = capture(client, SAMPLE + " Currency: " + currency)
+    assert client.post(f"/api/requests/{rid}/recommendations").status_code == 200
     response = client.get(f"/api/requests/{rid}/budget-filter")
     assert response.status_code == 422 and "Only AUD" in response.text
 
@@ -139,6 +142,7 @@ def test_budget_missing_and_empty_candidates_are_explicit(tmp_path):
         evidence = dict(budget=amount, party_size=None, occasion=None, taste_preferences=["red wine"], constraints=[])
         with TestClient(create_app(tmp_path / str(uuid4()), "fixture", extractor=lambda _: json.dumps(evidence))) as client:
             rid = capture(client, text)
+            assert client.post(f"/api/requests/{rid}/recommendations").status_code == 200
             result = client.get(f"/api/requests/{rid}/budget-filter")
             assert result.status_code == expected
             if expected == 200:

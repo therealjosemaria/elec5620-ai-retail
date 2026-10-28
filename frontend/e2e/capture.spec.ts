@@ -12,7 +12,7 @@ test("React → FastAPI → LangGraph fixture → SQLite → React, including re
   await expect(page.getByText("RequestConfirmed", { exact: true })).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", { name: "Saved in SQLite" })).toBeVisible();
-  await expect(page.getByText("0 / 5 local live attempts today (UTC). University quota is separate.")).toBeVisible();
+  await expect(page.getByText("0 / 5 university attempts recorded today (UTC). Provider quota is separate.")).toBeVisible();
   await page.screenshot({ path: "test-results/capture-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole("heading", { name: "Saved in SQLite" })).toBeVisible();

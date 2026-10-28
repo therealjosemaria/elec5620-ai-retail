@@ -196,7 +196,7 @@ def test_api_capture_handoff_recommendation_and_no_data_mutation(tmp_path):
         assert client.post("/api/requests", json={"request_id": request_id, "text": SAMPLE}).status_code == 201
         with sqlite3.connect(path) as db:
             before = list(db.iterdump())
-        response = client.get(f"/api/requests/{request_id}/recommendations")
+        response = client.post(f"/api/requests/{request_id}/recommendations")
         assert response.status_code == 200 and response.json()["outcome"] == "complete"
         assert {p["product"]["product_id"] for p in response.json()["recommendations"]} == {"product-001", "product-002"}
         assert client.get("/api/status").json()["live_attempts_today"] == 0
@@ -205,7 +205,8 @@ def test_api_capture_handoff_recommendation_and_no_data_mutation(tmp_path):
         assert client.post("/api/restocking-priorities", json={"authorised": True}).status_code == 422
         assert client.post("/api/demo/restocking-priorities", json={}).json()["data_mode"] == "fixture"
         with sqlite3.connect(path) as db:
-            assert list(db.iterdump()) == before
+            # Only the durable recommendation cache may change, not source/business data.
+            assert [line for line in db.iterdump() if 'INSERT INTO "recommendation_results"' not in line] == before
 
 
 def test_handoff_failure_does_not_bypass_inbox(tmp_path):
