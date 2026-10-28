@@ -319,6 +319,7 @@ Existing `team-setup/` files are untouched historical planning material.
 | `backend/interfaces.py` | Inventory service outline, not a stock implementation |
 | `backend/retail_data.py` | Shared products/sales tables, prototype data and loaders |
 | `backend/profit_margin.py` | UC-M3-02 profit margin calculation |
+| `backend/low_stock.py` | UC-M3-01 low-stock alert decision (Figure 20 states) |
 | `backend/recommendations.py` | UC-M2-01 conservative catalogue matcher |
 | `backend/restocking.py` | UC-M2-02 authorised evidence ranking |
 | `backend/member2_demo.py` | Isolated, labelled restocking fixtures |
@@ -327,6 +328,7 @@ Existing `team-setup/` files are untouched historical planning material.
 | `tests/` | Backend/schema tests |
 | `frontend/e2e/` | Browser tests |
 | `docs/stage1-alignment.md` | Report-to-code mappings and gaps |
+| `docs/uc-m3-01-low-stock-alert.md` | UC-M3-01 states, decisions and acceptance |
 | `docs/uc-m3-02-profit-margin.md` | UC-M3-02 decisions, shared data tables and acceptance |
 | `VERIFICATION.md` | Verification evidence and limitations |
 | `AGENTS.md` | Standing project instructions |

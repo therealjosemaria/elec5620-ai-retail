@@ -22,7 +22,7 @@ The owner explicitly approved these rules in this session:
 
 | UC | Implemented behaviour | Verification |
 | --- | --- | --- |
-| M3-01 alerts | Inventory Agent consumes typed lookup evidence, alerts every current product at/below threshold, reports no alert above, withholds stale/missing/invalid records | Equality/zero/invalid/future/naive cases, source gaps, access denial, persisted trace, unchanged inventory/sales |
+| M3-01 alerts | Inventory Agent consumes typed lookup evidence, alerts every current product at/below threshold, reports no alert above, withholds stale/missing/invalid records. Owner follow-up: Figure 20 states in `backend/low_stock.py`, see `docs/uc-m3-01-low-stock-alert.md` | Equality/zero/invalid/future/naive cases, source gaps, access denial, persisted trace, unchanged inventory/sales |
 | M5-01 reorder | Uses current evidence and approved formula; shows stock, threshold, timestamp, quantity, rule and explanation. Missing rule produces no unsupported quantity | Formula boundaries, missing/stale withholding, missing rule, real SQLite API and React |
 | M5-02 demand | Business Insights reads completed quantities; shows both periods, units/change/rule/classification and supporting rows. Missing cost does not invalidate quantities | Increasing/decreasing/stable, zero baseline, missing comparison/rule, invalid scope/date/rows, source error, read-only storage, API/React |
 | M4-01/02 | Avan's Decimal/Stale contracts merged; InventoryQueryService owns freshness. API consumes saved requests and current inventory, not browser-supplied prices/stock/roles | Existing and new contract, authentication, spoof rejection, source/availability and OpenAPI tests |

@@ -416,3 +416,17 @@ The owner enabled Sprints; automatically created sprint 1 was configured as
 **Stage 2 final validation**, with KAN-16/17 only and planned end 1 November 2026
 23:59 Australia/Sydney. It remains future pending team-agreed estimates and actual
 start time. No historical sprint progress or estimates were fabricated.
+
+## UC-M3-01 owner follow-up — 28 October 2026
+
+Member 3 (Lio / Houyuchen) took over UC-M3-01 with Jose's agreement. The alert
+decision moved to `backend/low_stock.py` with Figure 20 item states (`low_stock`,
+`not_required`, `stale`, `excluded`); overall outcomes, the API, React form, saved
+traces and the UC-M5-01 reorder path are unchanged. See
+`docs/uc-m3-01-low-stock-alert.md`.
+
+On native Windows 11 with Python 3.13.17: **284 backend tests passed** (22 new in
+`tests/test_low_stock.py`). Production build passed and **12 fixture browser tests
+passed**, run with a temporary uncommitted Windows Playwright config because the
+committed launch command is POSIX-only. §6.3.1 5-second target: decision over
+10,000 records median 0.051 s; full API request median 0.018 s. Zero model calls.
