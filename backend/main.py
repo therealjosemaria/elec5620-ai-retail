@@ -7,6 +7,7 @@ import logging
 import os
 from pathlib import Path
 import sqlite3
+from secrets import compare_digest
 from typing import TypedDict
 from uuid import UUID
 
@@ -24,6 +25,8 @@ from backend.retail_data import ensure_retail_data, load_products
 from backend.recommendations import RecommendationResult, recommend_drinks
 from backend.restocking import RestockingResult, RestockingScope, analyse_restocking
 from backend.member2_demo import demo_restocking
+from backend.stock import (InventoryLookupRequest, InventoryLookupResult,
+                           InventoryProcurementAgent, Requester, ensure_inventory_data)
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
@@ -45,6 +48,11 @@ class Submission(BaseModel):
         if not value.strip():
             raise ValueError("Enter a request.")
         return value.strip()
+
+
+class StockSelection(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    product_ids: list[str] = Field(max_length=100)
 
 
 class State(TypedDict, total=False):
@@ -132,7 +140,8 @@ def live_extract(text):
 
 def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
                publisher: RequestPublisher | None = None, *,
-               restocking_authorise=None, inventory_service=None, restocking_sales_loader=None):
+               restocking_authorise=None, inventory_service=None, restocking_sales_loader=None,
+               operator_token=None):
     selected_mode = mode or os.getenv("MODEL_MODE", "fixture")
     if selected_mode not in ("fixture", "live"):
         raise ValueError("MODEL_MODE must be fixture or live.")
@@ -141,6 +150,7 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
     if limit < 0:
         raise ValueError("LIVE_DAILY_LIMIT must be nonnegative.")
     graph = graph_for(extractor or (fixture_extract if selected_mode == "fixture" else live_extract))
+    stock_token = operator_token if operator_token is not None else os.getenv("OPERATOR_TOKEN", "")
 
     def connect():
         connection = sqlite3.connect(path, timeout=5)
@@ -169,6 +179,7 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
             if "request_status" not in columns:
                 db.execute("ALTER TABLE customer_requests ADD COLUMN request_status TEXT NOT NULL DEFAULT 'RequestAvailable'")
             ensure_retail_data(db)
+            ensure_inventory_data(db)
         yield
 
     app = FastAPI(title="ELEC5620 — User Need Input", lifespan=lifespan)
@@ -212,6 +223,19 @@ def create_app(db_path=None, mode=None, extractor=None, daily_limit=None,
         # Catalogue facts only. Stock remains behind InventoryQueryService.
         with connect() as db:
             return load_products(db)
+
+    @app.post("/api/inventory/lookup", response_model=list[InventoryLookupResult])
+    def current_stock(selection: StockSelection, request: Request):
+        # Browser navigation and claimed roles are not authorisation.
+        supplied = request.headers.get("Authorization", "")
+        if not stock_token or not compare_digest(supplied.encode(), ("Bearer " + stock_token).encode()):
+            raise HTTPException(403, "Operator access denied. Enter the configured operator token.")
+        if not selection.product_ids:
+            raise HTTPException(400, "Select at least one product; no inventory lookup performed.")
+        service = InventoryProcurementAgent(path, requester=Requester.FOUNDER_OPERATOR,
+            authorise=lambda role: role is Requester.FOUNDER_OPERATOR)
+        return service.lookup_stock(InventoryLookupRequest(
+            product_ids=selection.product_ids, requester=Requester.FOUNDER_OPERATOR))
 
     @app.get("/api/requests/{request_id}", response_model=SavedRequest)
     def get_request(request_id: UUID):

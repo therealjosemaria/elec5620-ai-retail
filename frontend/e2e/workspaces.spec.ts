@@ -24,8 +24,9 @@ test("All three workspaces expose honest integration states and preserve navigat
   await page.getByRole("button", {name: /02 Inventory & Procurement/}).click();
   await expect(page).toHaveURL(/#inventory$/);
   await expect(page.getByRole("heading", {name: /A clearer view/})).toBeVisible();
-  await expect(page.locator("tbody tr")).toHaveCount(6);
-  await expect(page.locator("tbody tr").first()).toContainText("Unknown");
+  await expect(page.getByRole("group", {name: "Select products"}).getByRole("checkbox")).toHaveCount(6);
+  await expect(page.getByLabel("Operator token")).toBeVisible();
+  await expect(page.getByRole("heading", {name: "Stock lookup results"})).toHaveCount(0);
   for (const title of ["Low-stock alerts", "Availability", "Reorder suggestions"]) {
     await page.getByRole("tab", {name: new RegExp(title)}).click();
     await expect(page.getByRole("tabpanel")).toContainText("No result has been generated.");

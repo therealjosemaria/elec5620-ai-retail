@@ -189,3 +189,38 @@ The larger ceiling is headroom, not a requested response length.
 Budget remained unknown, red wine was preserved and status was RequestConfirmed.
 The port-8000 preview was restarted with these changes. This is representative
 verification, not a guarantee that a provider can never truncate again.
+
+## Team integration and UC-M1-02 — 28 October 2026 (Sydney)
+
+Fetched all published branches and retained contributor history. Lio's profit
+margin work was already main. PR #2 integrated Cedar's latest unified-UI branch
+(which contains the earlier M2 branch), Avan's budget/availability branch, and
+Lio's inventory-contract proposal. Verified main at `987d0aa`; all six earlier
+contributor/integration remote branches are ancestors. Main's pull-request-only
+rule remains active. No remote branches were deleted.
+
+Integration baseline: **159 backend tests, seven browser tests, production build
+passed**. No model calls. Existing modules are integrated as source; pending UI
+and service connections are labelled rather than claimed complete.
+
+UC-M1-02 on `feat/m1-current-stock` implements report §6.1.2 and §10.2 through
+InventoryQueryService / InventoryProcurementAgent. Operator token authentication
+precedes lookup; browser-supplied roles are rejected. The service opens SQLite
+read-only, preserves current/stale evidence, reports missing/incomplete/outage
+results explicitly, and retains the single-ID adapter used by Cedar's code.
+Startup seeds labelled prototype inventory once and never refreshes timestamps
+on existing data. Lookup performs no other business action or model call.
+
+Final verification: **177 backend tests, eight browser tests and the production
+build passed**. Tests cover exact values, zero quantity, mixed invalid/valid IDs,
+deduplication, missing/negative/naive/future fields, stale boundary, unavailable
+source, denied actor, missing/wrong operator token, role spoofing, empty selection,
+unchanged SQL dumps, and 95th percentile of 20 local six-product lookups below
+two seconds. Browser verification covers the authenticated form, denial,
+found/stale/not-found results, mobile layout and clearing secrets on reload.
+
+Working checkout: `/home/jmos0905/MBSE/team-workspace`. Existing original source,
+databases and credentials in the parent folder were preserved. A separate ignored
+`.env` configures fixture preview and a private operator token. It is excluded
+from Git along with databases, dependencies and screenshots. No university model
+calls were used in this integration or UC-M1-02 work.
