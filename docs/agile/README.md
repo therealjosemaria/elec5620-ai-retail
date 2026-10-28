@@ -9,20 +9,21 @@ delivery evidence; the retail application's ten core use cases remain unchanged.
 Existing project: **mon-13-15-group-8**, key **KAN**,
 [board 2](https://mbse5620.atlassian.net/jira/software/projects/KAN/boards/2).
 Jira access is working through the account authorized for this site. The 17 real
-items are **KAN-4 through KAN-20**: 10 Done, 2 In Review, 4 To Do, 1 In Progress.
+items are **KAN-4 through KAN-20**: 15 Done, 1 To Do, 1 In Progress after PR #8.
 Each includes report/contribution evidence and current tracking notes. Only Jose
 is currently returned as an assignable human; others are credited in descriptions
 and member labels until their Jira accounts can be assigned.
 
 The owner confirmed KAN-1, KAN-2 and KAN-3 are default placeholders and requested
 their deletion. The connected tool catalog has no issue-deletion operation, so
-they remain pending removal in Jira. Open each → **… → Delete**, removing the
-subtask KAN-3 first. Do not delete real KAN-4 through KAN-20.
+KAN-1/2 subsequently returned not found; KAN-3 remained at the last check. Open
+KAN-3 → **… → Delete** if it is still present. Do not delete real KAN-4 through KAN-20.
 
-This team-managed board currently does not support sprints. A space admin must
-open the space menu **… → Space settings → Features → Sprints** and enable it.
-Enable/add Reports for the required burndown. The connector cannot toggle these
-features. No sprint, estimates or historical burndown have been fabricated.
+Sprints are now enabled. Future sprint 1 is **Stage 2 final validation**, with
+KAN-16 (clean setup/joint demo) and KAN-17 (real Agile evidence). Its planned end
+is 1 November 2026 at 23:59 Australia/Sydney, matching the supplied source deadline.
+The team must agree remaining estimates and actual start before starting it.
+Enable/add Reports for the assessed burndown; no historical progress is invented.
 
 `backlog.csv` is the source used to prepare these items, not a second import to run.
 Use `jira-issue-map.json` to update existing items and avoid duplicates. It contains

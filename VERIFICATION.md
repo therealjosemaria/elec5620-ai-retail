@@ -408,3 +408,11 @@ current clean Canvas-package deployment rehearsal, contribution statements and
 genuine Agile meeting/sprint evidence are still required. Original report owners
 retain ownership; the gap implementation here is Jose's authorized assistant work,
 not newly claimed authorship by Cedar, Lio, Avan or Lira.
+
+PR #8 merged the completed features into main; Avan's latest branch is an
+ancestor of main. Jira KAN-6/8/12/13/20 were updated with evidence and moved to
+Done. Readback verified 15 Done, 1 To Do and 1 In Progress among the 17 real items.
+The owner enabled Sprints; automatically created sprint 1 was configured as
+**Stage 2 final validation**, with KAN-16/17 only and planned end 1 November 2026
+23:59 Australia/Sydney. It remains future pending team-agreed estimates and actual
+start time. No historical sprint progress or estimates were fabricated.

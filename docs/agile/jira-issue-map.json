@@ -21,8 +21,10 @@
       "index": 2,
       "key": "KAN-6",
       "summary": "UC-M2-01 Receive Drink Recommendations",
-      "status": "In Review",
-      "contributions": "Cedar; Jose integration/Qwen"
+      "status": "Done",
+      "contributions": "Cedar; Jose integration/Qwen",
+      "completion_evidence": "https://github.com/therealjosemaria/elec5620-ai-retail/pull/8",
+      "completion_credit": "Jose's authorized coding assistant; original report ownership retained"
     },
     {
       "index": 3,
@@ -35,8 +37,10 @@
       "index": 4,
       "key": "KAN-8",
       "summary": "UC-M3-01 Receive Low-Stock Alert",
-      "status": "To Do",
-      "contributions": "Lio"
+      "status": "Done",
+      "contributions": "Lio",
+      "completion_evidence": "https://github.com/therealjosemaria/elec5620-ai-retail/pull/8",
+      "completion_credit": "Jose's authorized coding assistant; original report ownership retained"
     },
     {
       "index": 5,
@@ -63,15 +67,19 @@
       "index": 8,
       "key": "KAN-12",
       "summary": "UC-M5-01 Review Reorder Suggestions",
-      "status": "To Do",
-      "contributions": "Lira"
+      "status": "Done",
+      "contributions": "Lira",
+      "completion_evidence": "https://github.com/therealjosemaria/elec5620-ai-retail/pull/8",
+      "completion_credit": "Jose's authorized coding assistant; original report ownership retained"
     },
     {
       "index": 9,
       "key": "KAN-13",
       "summary": "UC-M5-02 Detect Demand Trends",
-      "status": "To Do",
-      "contributions": "Lira"
+      "status": "Done",
+      "contributions": "Lira",
+      "completion_evidence": "https://github.com/therealjosemaria/elec5620-ai-retail/pull/8",
+      "completion_credit": "Jose's authorized coding assistant; original report ownership retained"
     },
     {
       "index": 10,
@@ -119,14 +127,26 @@
       "index": 16,
       "key": "KAN-20",
       "summary": "Review Avan's latest Member 4 contracts and API integration",
-      "status": "In Review",
-      "contributions": "Avan"
+      "status": "Done",
+      "contributions": "Avan",
+      "completion_evidence": "https://github.com/therealjosemaria/elec5620-ai-retail/pull/8",
+      "completion_credit": "Jose's authorized coding assistant; original report ownership retained"
     }
   ],
   "remainingSetup": [
-    "Delete user-confirmed placeholders KAN-3, KAN-2 and KAN-1 through Jira UI; connector exposes no deletion tool.",
-    "Enable Sprints and Reports in team-managed space settings; existing board reports no sprint support.",
+    "Confirm/remove placeholder KAN-3 in Jira UI if still present; KAN-1/2 returned not found at last check.",
     "Verify other teammates' Jira accounts are assignable before assigning their work.",
-    "Create actual sprint with team-agreed remaining scope, estimates and dates; record only real meetings."
-  ]
+    "Agree remaining estimates/actual start, then start prepared sprint 1; enable Reports and record only genuine meetings.",
+    "Complete current clean submission-package deployment, demo rehearsal and group contribution statement."
+  ],
+  "sprint": {
+    "id": 1,
+    "name": "Stage 2 final validation",
+    "state": "future",
+    "planned_end": "2026-11-01T23:59:00+11:00",
+    "issue_keys": [
+      "KAN-16",
+      "KAN-17"
+    ]
+  }
 }
