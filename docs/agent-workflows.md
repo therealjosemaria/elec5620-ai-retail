@@ -79,14 +79,16 @@ mode, creation time and catalogue digest. Empty/no-match results are saved too.
 - Cached product facts describe the generation-time catalogue snapshot. Budget
   filtering rereads current prices while preserving saved candidate order. A
   deleted candidate is reported rather than assigned an invented price.
-- Capture and recommendation attempts share the same UTC-day university-call cap. Each
+- Capture and recommendation attempts share UTC-day usage tracking. There is no
+  application daily cap by default; optional numeric test caps remain supported. Each
   live recommendation reservation is recorded in `attempts` with a
   `recommendation:<request UUID>` ID. Failed attempts count; cached reads do not.
 
-Optional [local Qwen fallback](local-qwen-fallback.md) takes over on an explicit
-university quota error or when that application cap is reached. Provider/model/
-reason are saved and displayed; local-only attempts do not consume university
-allowance. This does not fall back on authentication, network or validation errors.
+Optional [local Qwen fallback](local-qwen-fallback.md) takes over when the university
+is unreachable, times out, returns a server error or rejects calls for rate/quota
+capacity. Every new operation tries university first; historical day-long quota
+latches are ignored. Provider/model/reason are saved and displayed. Authentication,
+request-schema and validation errors remain explicit and do not select local.
 
 Complete untrusted recommendation output and its input snapshot are retained only
 in the private ignored database. Unsupported uncertainty labels are withheld,
@@ -96,8 +98,9 @@ validator fix, a developer may explicitly validate a retained failed result with
 validation with zero model calls; it is never automatic and does not retry a
 network request. Changed published needs or a damaged snapshot prevent recovery.
 
-This is at-most-once application dispatch per customer request, not a guarantee
-of provider billing or successful completion after an interrupted network call.
+Each provider is dispatched at most once per reserved operation; service failure
+can dispatch once to university and once to local. This is not a guarantee of
+provider billing or successful completion after an interrupted network call.
 
 ## API and trace persistence
 

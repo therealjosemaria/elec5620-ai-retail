@@ -124,10 +124,10 @@ class RecommendationStore:
             if uses_model and self.mode == "live":
                 used = db.execute("SELECT count(*) FROM attempts WHERE mode='live' AND day=?", (now.date().isoformat(),)).fetchone()[0]
                 if self.router is not None and self.generator is None:
-                    provider = self.router.choose(db, used, self.limit)
+                    provider = self.router.choose()
                 if provider == "university" and self.generator is None and not os.getenv("ELEC5620_API_KEY"):
                     raise RecommendationError(503, "Backend API key is not configured; no model call made.")
-                if used >= self.limit and provider != "local":
+                if self.limit is not None and used >= self.limit:
                     raise RecommendationError(429, "Local daily live-call limit reached. No model call was made.")
                 db.execute("INSERT INTO attempts VALUES (?, ?, ?, ?, 'pending')",
                     (attempt_id, catalogue_digest, "local" if provider == "local" else "live", now.date().isoformat()))

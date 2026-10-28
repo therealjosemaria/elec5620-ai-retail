@@ -1,7 +1,8 @@
 # Optional local Qwen fallback
 
 The university `campus-qwen` endpoint remains primary. The owner requested the
-existing server model as a second provider when university allowance is exhausted.
+existing server model as a fallback when the university service is unavailable,
+unreachable, timing out or rejecting calls for capacity.
 The inspected Pi has Qwen2.5-1.5B-Instruct Q4_K_M weights and a llama.cpp server
 binary already installed; no model download or new inference package was needed.
 The local model is smaller and its quality/performance may differ.
@@ -34,22 +35,21 @@ inference endpoint on localhost.
 
 ## Routing policy
 
-- A new live operation first uses university Qwen while its application cap has
-  remaining allowance.
-- An explicit university quota error (403/429 with a quota/budget error code)
-  permits one local fallback. The university attempt still counts against the
-  local university-call cap. The actual provider/model/reason is saved.
-- After that quota rejection, further new live operations use local Qwen for the
-  remainder of the current UTC day. A new explicit operation on a later UTC day
-  can try university again; this is an application recheck policy, not a claim
-  that the university allowance resets daily.
-- Reaching the application's university-call cap also selects local Qwen without
-  sending a university request. Such local operations are recorded as `local`
-  attempts and do not consume university-call allowance.
-- Authentication errors, transient rate limits without a quota code, connection
-  errors, truncation and invalid output do not silently trigger fallback.
+- Every new live operation tries university Qwen first. `LIVE_DAILY_LIMIT=unlimited`
+  removes the application's daily cap; university-enforced limits still apply.
+  Usage counting and saved-result reuse remain active.
+- Connection errors, timeouts, HTTP 408/429, server errors (5xx) and explicit quota
+  rejection permit one local fallback. Provider/model/reason are saved and shown.
+- The next new operation tries university again. There is no day-long local latch;
+  historical quota-state rows are ignored. Cached results never generate again.
+- Authentication/permission errors (except an explicit quota code), malformed
+  requests, wrong endpoints, truncation and invalid output do not trigger fallback.
+- An optional numeric application cap is still supported for isolated tests. It
+  rejects new calls at the configured count; reaching it does not select local.
 - Local failures remain explicit. Both providers use the same evidence validation,
-  durable recommendation cache and zero automatic retry policy.
+  durable recommendation cache and zero automatic retry policy. An ambiguous
+  timeout may already have consumed university tokens; the local fallback is
+  recorded as a different provider, not a free university retry.
 
 Captured requests and saved recommendations record `model_provider`, `model_name`
 and `fallback_reason`. The UI shows these fields so local results are never

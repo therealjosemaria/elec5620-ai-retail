@@ -1,9 +1,7 @@
-"""University-first Qwen transport with explicit quota-only local fallback."""
-from contextlib import closing
-from datetime import datetime, timezone
+"""University-first Qwen transport with explicit service-unavailability fallback."""
 import os
 
-from openai import APIStatusError, LengthFinishReasonError
+from openai import APIConnectionError, APIStatusError, LengthFinishReasonError
 
 
 class ModelText(str):
@@ -56,25 +54,21 @@ class ModelRouter:
         self.connect = connect
         self.enabled = os.getenv("LOCAL_QWEN_FALLBACK_ENABLED", "false").lower() == "true"
 
-    def choose(self, db, used, limit):
-        if not self.enabled:
-            return "university"
-        row = db.execute("SELECT day FROM model_provider_state WHERE name='university_quota_exhausted'").fetchone()
-        if used >= limit or (row and row[0] == datetime.now(timezone.utc).date().isoformat()):
-            return "local"
+    def choose(self):
+        # Each new operation tries the primary again, including after an outage.
+        # Historical quota-state rows are deliberately ignored.
         return "university"
 
     def invoke(self, messages, *, max_tokens, provider):
         try:
-            result = complete_json(messages, max_tokens=max_tokens, provider=provider)
-            if provider == "local":
-                return ModelText(result, provider=result.provider, model=result.model, reason="university_cap_or_quota_state")
-            return result
-        except APIStatusError as exc:
-            if provider != "university" or not self.enabled or not is_quota_exhausted(exc):
+            return complete_json(messages, max_tokens=max_tokens, provider=provider)
+        except (APIConnectionError, APIStatusError) as exc:
+            unavailable = isinstance(exc, APIConnectionError) or (
+                isinstance(exc, APIStatusError) and (exc.status_code in (408, 429) or exc.status_code >= 500))
+            if provider != "university" or not self.enabled or not (unavailable or is_quota_exhausted(exc)):
                 raise
-            with closing(self.connect()) as db, db:
-                db.execute("INSERT OR REPLACE INTO model_provider_state VALUES ('university_quota_exhausted', ?)",
-                           (datetime.now(timezone.utc).date().isoformat(),))
+            reason = ("university_quota_exhausted" if is_quota_exhausted(exc) else
+                      "university_rate_limited" if isinstance(exc, APIStatusError) and exc.status_code == 429 else
+                      "university_unavailable")
             result = complete_json(messages, max_tokens=max_tokens, provider="local")
-            return ModelText(result, provider=result.provider, model=result.model, reason="university_quota_exhausted")
+            return ModelText(result, provider=result.provider, model=result.model, reason=reason)
