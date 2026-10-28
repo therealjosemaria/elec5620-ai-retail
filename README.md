@@ -1,7 +1,7 @@
 # ELEC5620 — shared development foundation
 
-**Publication status:** prepared locally, not yet committed or merged. Until the
-foundation is published, cloning the GitHub repository will not provide this app.
+**Branch status:** `develop` contains the M2 prototype and unified interface as
+separate commits. These changes have not been merged into `main`.
 
 This guide covers first setup, seeing React, daily development, live-model access,
 tests and the team Git workflow. Start with fixture mode; no API key or VPN is
@@ -15,9 +15,16 @@ needed for the sample demonstration.
 [Merge/submission checks](#before-merging-or-submitting) ·
 [Limitations](#known-limitations)
 
-Implements **UC-M1-01 / M1-AR-01: Submit Product Assistance Request / User Need Input**.
+Includes **UC-M1-01 / M1-AR-01: Submit Product Assistance Request / User Need Input**.
 React → FastAPI → LangGraph extraction + validation → SQLite → React readback.
-No recommendation, budget filtering, clarification or inventory operations.
+Member 2 adds rule-based catalogue recommendations after capture and an isolated
+restocking-priority demonstration. See [Member 2 implementation](docs/member2-implementation.md)
+for boundaries, supported phrases, API integration and remaining live-model work.
+
+The unified [three-agent interface](docs/unified-interface.md) now opens on a
+catalogue landing page. Use **Customer assistant**, **Inventory & procurement**
+and **Business insights** in the navigation. Pending features are labelled;
+the interface does not imply all ten backend use cases are implemented.
 
 ## Requirements and setup
 
@@ -82,7 +89,8 @@ cd ..
 MODEL_MODE=fixture python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
-Open http://127.0.0.1:8000. Click **Use sample**, then **Capture and save**.
+Open http://127.0.0.1:8000. Select **Customer assistant**, click **Use sample**,
+then **Capture and save**.
 The UI performs a separate database GET after saving and restores the saved record after reload.
 Expand **Inspect stored record** to see the database representation.
 Data lives in `data/retail.sqlite3`, excluded from source control.
@@ -245,8 +253,9 @@ server on port 8001 with `data/e2e.sqlite3` and exercise the real compiled React
 API, LangGraph, persistence and reload. Browser downloads need internet.
 Do not run against a live-mode server; the test config starts its own.
 
-Current baseline: **100 backend tests and two browser tests**. Add tests for new
-features; the count will increase. Port 8001 must be free. Browser tests always
+The original foundation baseline was **100 backend tests and two browser tests**;
+Member 2 adds feature and browser coverage. See its implementation document for
+current verification results. Port 8001 must be free. Browser tests always
 start their own fixture backend, even if your development `.env` says live.
 They use the compiled React build, not the Vite development server.
 
@@ -263,7 +272,9 @@ sqlite3 data/retail.sqlite3 'SELECT request_id, needs, missing_fields, mode FROM
 
 ## Scope and reproducibility
 
-Only this one use case is implemented. Final five-versus-ten scope remains undecided.
+UC-M1-01 is implemented; Member 2 prototype coverage and integration limitations
+are documented separately. The user-confirmed submitted report §5 assigns each
+member two core features; it does not make optional features MVP requirements.
 SQLite uses Python's standard library, avoiding an unnecessary ORM.
 `requirements.txt` and `frontend/package-lock.json` pin the tested dependency resolution.
 `requirements.in` describes allowed stable release families; do not upgrade automatically
@@ -281,6 +292,10 @@ Existing `team-setup/` files are untouched historical planning material.
 | `backend/interfaces.py` | Inventory service outline, not a stock implementation |
 | `backend/retail_data.py` | Shared products/sales tables, prototype data and loaders |
 | `backend/profit_margin.py` | UC-M3-02 profit margin calculation |
+| `backend/recommendations.py` | UC-M2-01 conservative catalogue matcher |
+| `backend/restocking.py` | UC-M2-02 authorised evidence ranking |
+| `backend/member2_demo.py` | Isolated, labelled restocking fixtures |
+| `frontend/src/Member2.tsx` | Recommendation and sample restocking UI |
 | `frontend/src/main.tsx` | Request entry and saved-record UI |
 | `tests/` | Backend/schema tests |
 | `frontend/e2e/` | Browser tests |
@@ -293,7 +308,10 @@ Existing `team-setup/` files are untouched historical planning material.
 See [its acceptance matrix](docs/uc-m1-01-acceptance.md) for evidence and limits.
 **Partially implemented:** UC-M3-02 profit margin calculation over the shared
 sales data, without an API route or UI yet; see [its reference](docs/uc-m3-02-profit-margin.md).
-**Not implemented:** UC-M1-02 stock lookup or the remaining seven use cases.
+**Prototype:** UC-M2-01 rule-based recommendation API/UI; UC-M2-02 analysis core,
+default-denied integration API and isolated fixture UI. General natural-language
+recommendation and authenticated current-stock integration remain incomplete.
+**Not implemented:** UC-M1-02 stock lookup and the other remaining use cases.
 Shared `products` and `sales` tables with prototype data exist; inventory tables,
 repositories and agent behaviour do not. The app has no authentication, checkout,
 payment or public-hosting setup.
@@ -445,8 +463,8 @@ Never post `.env`, authentication headers, keys or credential screenshots.
 - Number words, correctly grouped thousands and `k` shorthand are supported;
   ranges/alternatives and unsupported ambiguous expressions remain unknown.
 - Evidence checks cannot prove complete or semantically correct model extraction.
-- The capture use case publishes to a durable request inbox. The other members'
-  downstream business features are not implemented; a full event-history UI is not included.
+- The capture use case publishes to a durable request inbox consumed by Member 2's
+  rule-based recommendation prototype; a full event-history UI is not included.
 - Stock lookup and its detailed interface still need implementation.
 - No authentication: keep the app local.
 - Linux ARM64 is the tested platform. Mac/Windows-WSL teammate onboarding remains unverified.
