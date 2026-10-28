@@ -22,6 +22,11 @@ assignees, estimates, historical status changes or completion dates are invented
 Items labelled `retrospective` document work already evidenced by source/PRs;
 the team should confirm their acceptance and current status after importing.
 
+[Contribution evidence](contribution-evidence.md) maps current implementations,
+original authors, integration credit, remaining work and suggested present-day
+tracking states to commits/PRs. It also records Avan's two newer unmerged commits;
+their presence is contribution evidence, not proof they are already integrated.
+
 ## Real sprint and burndown
 
 1. Review the remaining work with all five members and agree the sprint goal.
