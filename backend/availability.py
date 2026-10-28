@@ -1,6 +1,6 @@
 """UC-M4-02: Classify product availability from inventory lookup evidence."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from enum import StrEnum
 
 from pydantic import Field, StrictInt
@@ -11,6 +11,7 @@ from backend.models import DomainModel
 class InventoryLookupStatus(StrEnum):
     FOUND = "Found"
     NOT_FOUND = "NotFound"
+    STALE = "Stale"
     ERROR = "Error"
 
 
@@ -38,18 +39,14 @@ class ProductAvailabilityResult(DomainModel):
 
 def check_product_availability(
     lookup: InventoryLookupResult,
-    *,
-    now: datetime | None = None,
-    max_age: timedelta = timedelta(hours=24),
 ) -> ProductAvailabilityResult:
-    """Classify availability without modifying or reserving inventory."""
-
-    current_time = now or datetime.now(timezone.utc)
+    """Classify availability without reading, modifying, or reserving stock."""
 
     if lookup.status != InventoryLookupStatus.FOUND:
         return ProductAvailabilityResult(
             product_id=lookup.product_id,
             status=AvailabilityStatus.UNKNOWN,
+            stock_quantity=lookup.stock_quantity,
             last_updated=lookup.last_updated,
             reason=lookup.limitation or (
                 f"Inventory lookup status is {lookup.status.value}."
@@ -79,26 +76,6 @@ def check_product_availability(
             stock_quantity=lookup.stock_quantity,
             last_updated=lookup.last_updated,
             reason="Inventory timestamp has no timezone.",
-        )
-
-    record_age = current_time - lookup.last_updated
-
-    if record_age < timedelta(0):
-        return ProductAvailabilityResult(
-            product_id=lookup.product_id,
-            status=AvailabilityStatus.UNKNOWN,
-            stock_quantity=lookup.stock_quantity,
-            last_updated=lookup.last_updated,
-            reason="Inventory timestamp is in the future.",
-        )
-
-    if record_age > max_age:
-        return ProductAvailabilityResult(
-            product_id=lookup.product_id,
-            status=AvailabilityStatus.UNKNOWN,
-            stock_quantity=lookup.stock_quantity,
-            last_updated=lookup.last_updated,
-            reason="Inventory record is stale.",
         )
 
     if lookup.stock_quantity == 0:
