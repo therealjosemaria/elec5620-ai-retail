@@ -430,3 +430,17 @@ On native Windows 11 with Python 3.13.17: **284 backend tests passed** (22 new i
 passed**, run with a temporary uncommitted Windows Playwright config because the
 committed launch command is POSIX-only. §6.3.1 5-second target: decision over
 10,000 records median 0.051 s; full API request median 0.018 s. Zero model calls.
+
+## Combined recommendation preferences — 28 October 2026
+
+Based on PR #10, including Lio's latest low-stock follow-up. Combined preference
+validation now withholds dry red/sweet white alternatives for a request requiring
+sweet red wine. Existing recommendation caches are corrected offline on first
+read; occasion/party-size messaging distinguishes captured needs from unavailable
+catalogue suitability. Historical workflow snapshots are preserved.
+
+**290 fixture/mocked backend tests, 12 fixture browser tests and the production
+build passed.** Actual preview checks reused both the reported university result
+(now no-match) and an earlier positive university result (handoff preserved),
+with **zero new model calls**. No fresh live inference was performed. See
+`docs/recommendation-preference-validation.md` for exact scope and limitations.

@@ -13,6 +13,7 @@ from backend.profit_margin import ProfitMarginResult
 from backend.replenishment import InventoryDecisionResult
 from backend.demand import DemandResult
 from backend.recommendation_store import RecommendationError, SavedRecommendations
+from backend.recommendations import SUITABILITY_LIMITATION
 from backend.restocking import (RestockingOutcome, RestockingResult, RestockingScope,
                                 analyse_restocking)
 
@@ -133,7 +134,7 @@ class CustomerAgent:
 
         def finish(state):
             report = state["report"].model_copy(deep=True)
-            if report.outcome == "complete" and any("did not resolve" in line or "no occasion or party-size" in line for line in report.limitations):
+            if report.outcome == "complete" and any("did not resolve" in line or line == SUITABILITY_LIMITATION for line in report.limitations):
                 report.outcome = "partial"
             event(report, "customer_agent", "customer", "present_assistance", report.outcome)
             return {"report": report}

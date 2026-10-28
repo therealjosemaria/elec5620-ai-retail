@@ -10,7 +10,7 @@ from uuid import UUID
 from backend.models import CustomerRequest, Product, RequestStatus
 from backend.qwen_recommendations import GroundingError, live_recommend, validate_choices
 from pydantic import ValidationError
-from backend.recommendations import RecommendationOutcome, RecommendationResult, recommend_drinks
+from backend.recommendations import RecommendationOutcome, RecommendationResult, recommend_drinks, combined_preferences
 
 
 class RecommendationError(Exception):
@@ -29,6 +29,7 @@ class SavedRecommendations(RecommendationResult):
     model_name: str | None = None
     fallback_reason: str | None = None
     revalidated_offline: bool = False
+    preference_validation_version: int = 0
 
 
 def ensure_recommendation_tables(db):
@@ -78,7 +79,7 @@ class RecommendationStore:
         result = validate_choices(raw[0], needs, products)
         if raw[3] == "local":
             result.method = "local_qwen_catalogue_recommendation"
-        saved = SavedRecommendations(**result.model_dump(), request_id=request_id, mode=job[0], created_at=job[2],
+        saved = SavedRecommendations(**result.model_dump(), preference_validation_version=1, request_id=request_id, mode=job[0], created_at=job[2],
             catalogue_digest=digest, model_provider=raw[3], model_name=raw[4], fallback_reason=raw[5], revalidated_offline=True)
         with closing(self.connect()) as db, db:
             changed = db.execute("UPDATE recommendation_results SET status='saved',payload=? WHERE request_id=? AND status='failed'",
@@ -97,7 +98,18 @@ class RecommendationStore:
             return None
         if row[0] != "saved":
             raise RecommendationError(409, "Recommendation generation is pending or failed. No automatic retry; start a new customer request for another intentional attempt.")
-        return SavedRecommendations.model_validate_json(row[1]).model_copy(update={"cache_hit": True})
+        saved = SavedRecommendations.model_validate_json(row[1])
+        if saved.preference_validation_version < 1:
+            with closing(self.connect()) as db:
+                inbox = db.execute("SELECT payload FROM request_inbox WHERE request_id=?", (str(request_id),)).fetchone()
+            if inbox is None:
+                raise RecommendationError(409, "Saved needs unavailable; cached recommendations cannot be safely revalidated. No model call made.")
+            saved = combined_preferences(CustomerRequest.model_validate_json(inbox[0]), saved).model_copy(
+                update={"preference_validation_version": 1, "revalidated_offline": True})
+            with closing(self.connect()) as db, db:
+                db.execute("UPDATE recommendation_results SET payload=? WHERE request_id=? AND status='saved' AND payload=?",
+                           (saved.model_dump_json(), str(request_id), row[1]))
+        return saved.model_copy(update={"cache_hit": True})
 
     def generate(self, request_id, request: CustomerRequest, load_catalogue):
         if cached := self.read(request_id, required=False):
@@ -159,7 +171,7 @@ class RecommendationStore:
                     result.method = "local_qwen_catalogue_recommendation"
             else:
                 result = recommend_drinks(request, lambda: products).model_copy(update={"method": "fixture_catalogue_match"})
-            saved = SavedRecommendations(**result.model_dump(), request_id=request_id, mode=self.mode,
+            saved = SavedRecommendations(**result.model_dump(), preference_validation_version=1, request_id=request_id, mode=self.mode,
                 created_at=now, catalogue_digest=catalogue_digest,
                 model_provider=getattr(raw, "provider", "injected" if raw is not None else
                                        ("fixture" if result.method == "fixture_catalogue_match" else "none")),
