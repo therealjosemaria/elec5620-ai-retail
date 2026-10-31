@@ -491,7 +491,10 @@ Never post `.env`, authentication headers, keys or credential screenshots.
 - Evidence checks cannot prove complete or semantically correct model extraction.
 - Capture publishes to a durable request inbox. Live Qwen recommendations and
   actual LangGraph handoffs are saved and shown in React. Occasion suitability
-  and serving quantities remain unknown because the catalogue lacks that metadata.
+  remains unknown. Party-size requests now show clearly labelled package estimates
+  using [prototype serving assumptions](docs/serving-assumptions.md), with Australian
+  standard drinks calculated separately from catalogue ABV. Group requirements
+  are not inferred from party size alone.
 - The optional small local Qwen has different quality and latency; validation
   can reject its output. It is not a guarantee of university-model equivalence.
 - Stock lookup is implemented on this branch with operator authorisation and

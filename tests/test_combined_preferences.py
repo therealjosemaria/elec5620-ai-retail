@@ -88,5 +88,5 @@ def test_old_cache_is_corrected_and_persisted_without_regeneration(tmp_path):
         assert not any(e["receiver"] == "inventory_procurement_agent" for e in workflow["trace"])
         with sqlite3.connect(path) as db:
             stored = json.loads(db.execute("SELECT payload FROM recommendation_results WHERE request_id=?", (rid,)).fetchone()[0])
-            assert stored["recommendations"] == [] and stored["preference_validation_version"] == 1
+            assert stored["recommendations"] == [] and stored["preference_validation_version"] == 3
         assert calls == []

@@ -15,7 +15,9 @@ With no supported combined match, the result is `no_match` and the graph stops
 before budget/inventory. It does not offer partial alternatives as suitable
 recommendations. A true sweet red catalogue product still passes. Occasion and
 party size remain captured; the warning now says catalogue data cannot assess
-their suitability. No catalogue fields or serving calculations are added.
+their suitability. This original correction added no catalogue fields or serving
+calculations; the later [serving-estimate extension](serving-assumptions.md) adds
+explicitly labelled application calculations without changing catalogue fields.
 
 ## Cache and model allowance
 
