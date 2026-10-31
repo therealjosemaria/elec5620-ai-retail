@@ -13,7 +13,7 @@ from backend.profit_margin import ProfitMarginResult
 from backend.replenishment import InventoryDecisionResult
 from backend.demand import DemandResult
 from backend.recommendation_store import RecommendationError, SavedRecommendations
-from backend.recommendations import SUITABILITY_LIMITATION
+from backend.servings import servings_per_package
 from backend.restocking import (RestockingOutcome, RestockingResult, RestockingScope,
                                 analyse_restocking)
 
@@ -134,8 +134,17 @@ class CustomerAgent:
 
         def finish(state):
             report = state["report"].model_copy(deep=True)
-            if report.outcome == "complete" and any("did not resolve" in line or line == SUITABILITY_LIMITATION for line in report.limitations):
+            if report.outcome == "complete" and any("did not resolve" in line for line in report.limitations):
                 report.outcome = "partial"
+            if report.outcome == "complete" and needs.party_size is not None:
+                products = (report.budget.products if report.budget is not None else
+                            [row.product for row in report.recommendations.recommendations])
+                if needs.party_size <= 0 or any(
+                    (capacity := servings_per_package(product)) is None or capacity < needs.party_size
+                    for product in products
+                ):
+                    report.outcome = "partial"
+                    report.limitations.append("One package per candidate cannot be confirmed to cover one assumed serving per person; review the package estimates.")
             event(report, "customer_agent", "customer", "present_assistance", report.outcome)
             return {"report": report}
 

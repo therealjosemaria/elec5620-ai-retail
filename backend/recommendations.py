@@ -63,9 +63,9 @@ def _phrase(value: str) -> str:
 
 
 SUITABILITY_LIMITATION = (
-    "Occasion and party size were captured where stated. Missing group-suitability metadata "
-    "does not invalidate supported preference matches. Occasion suitability and the amount needed "
-    "for a group are not established. Package estimates use explicitly labelled prototype serving assumptions."
+    "Occasion and party size were captured where stated. Occasion is retained as context, "
+    "not a verified catalogue suitability claim. Party coverage assumes one serving per person "
+    "using the explicitly labelled prototype package estimates."
 )
 
 
@@ -102,7 +102,7 @@ def combined_preferences(request: CustomerRequest, result: RecommendationResult)
             if request.party_size is not None:
                 # Revalidation of a cached result must not duplicate the note.
                 explanations = [text.split(MARKER, 1)[0].strip() for text in explanations]
-                explanations.append(serving_note(product))
+                explanations.append(serving_note(product, request.party_size))
             kept.append(recommendation.model_copy(update={
                 "matched_needs": evidence, "explanation": " ".join(explanations)}))
     captured_only = {request.occasion, str(request.party_size) if request.party_size is not None else None} - {None}
@@ -111,6 +111,7 @@ def combined_preferences(request: CustomerRequest, result: RecommendationResult)
     limits = [line for line in result.limitations
               if not line.startswith("Catalogue has no occasion or party-size suitability")
               and line not in captured_warnings
+              and not line.startswith("Occasion and party size were captured where stated.")
               and line != "Occasion and party size were captured where stated, but catalogue data cannot assess their suitability."]
     if request.occasion is not None or request.party_size is not None:
         if SUITABILITY_LIMITATION not in limits:

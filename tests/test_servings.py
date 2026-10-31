@@ -50,7 +50,8 @@ def test_party_size_does_not_invalidate_matching_product_or_multiply_alcohol():
     result = recommend_drinks(request, lambda: [p])
     assert result.outcome == "complete"
     assert "5 full servings" in result.recommendations[0].explanation
-    assert "amount needed for a group" in " ".join(result.limitations)
+    assert "assumes one serving per person" in " ".join(result.limitations)
+    assert "one package does not cover the stated 12 people" in result.recommendations[0].explanation
     again = combined_preferences(request, result)
     assert again.model_dump() == result.model_dump()
 
@@ -99,7 +100,7 @@ def test_existing_saved_result_gains_estimate_without_another_model_attempt(tmp_
         assert len(calls) == 1
         with sqlite3.connect(path) as db:
             old = json.loads(db.execute("SELECT payload FROM recommendation_results WHERE request_id=?", (rid,)).fetchone()[0])
-            old["preference_validation_version"] = 1
+            old["preference_validation_version"] = 2
             old["recommendations"][0]["explanation"] = old["recommendations"][0]["explanation"].split(MARKER)[0].strip()
             db.execute("UPDATE recommendation_results SET payload=? WHERE request_id=?", (json.dumps(old), rid))
         for _ in range(2):
@@ -110,3 +111,39 @@ def test_existing_saved_result_gains_estimate_without_another_model_attempt(tmp_
             assert updated["recommendations"][0]["explanation"].count(MARKER) == 1
             assert "5 full servings" in updated["recommendations"][0]["explanation"]
         assert len(calls) == 1
+
+
+@pytest.mark.parametrize("case,party_size,outcome", [
+    ("birthday", 5, "complete"),
+    ("larger_group", 6, "partial"),
+    ("stale", 5, "partial"),
+    ("unknown_size", 5, "partial"),
+    ("unsupported_combination", 5, "no_match"),
+])
+def test_full_customer_workflow_distinguishes_context_from_real_gaps(tmp_path, case, party_size, outcome):
+    path, rid = tmp_path / "db", str(uuid4())
+    with TestClient(create_app(path, "fixture")) as client:
+        assert client.post("/api/requests", json={"request_id": rid, "text": SAMPLE}).status_code == 201
+        needs = CustomerRequest(taste_preferences=["red wine"], occasion="22nd birthday party",
+                                party_size=party_size, budget="50")
+        if case == "unsupported_combination":
+            needs.taste_preferences.append("sweet")
+        with sqlite3.connect(path) as db:
+            db.execute("UPDATE request_inbox SET payload=? WHERE request_id=?", (needs.model_dump_json(), rid))
+            if case == "stale":
+                db.execute("UPDATE inventory_items SET last_updated='2020-01-01T00:00:00+00:00'")
+            if case == "unknown_size":
+                db.execute("UPDATE products SET name='Unknown package' WHERE category='Wine'")
+            before = db.execute("SELECT * FROM inventory_items ORDER BY product_id").fetchall()
+        response = client.post(f"/api/requests/{rid}/workflow")
+        assert response.status_code == 200
+        report = response.json()
+        assert report["outcome"] == outcome
+        if case == "birthday":
+            assert len(report["budget"]["products"]) == 2
+            assert all(row["status"] == "Available" for row in report["availability"])
+            assert all("one package covers the stated 5 people" in row["explanation"]
+                       for row in report["recommendations"]["recommendations"])
+            assert "not a verified catalogue suitability claim" in " ".join(report["limitations"])
+        with sqlite3.connect(path) as db:
+            assert db.execute("SELECT * FROM inventory_items ORDER BY product_id").fetchall() == before

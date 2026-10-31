@@ -5,7 +5,7 @@ import type { Product } from "./Catalogue";
 
 type Report = {
   workflow_id: string; created_at: string; outcome: string; trace: AgentEvent[]; limitations: string[];
-  recommendations: {cache_hit: boolean; mode: string; model_provider: string; model_name: string | null; recommendations: {product: Product}[]} | null;
+  recommendations: {cache_hit: boolean; mode: string; model_provider: string; model_name: string | null; recommendations: {product: Product; explanation: string}[]} | null;
   budget: {products: Product[]} | null; availability: Availability[];
 };
 
@@ -45,6 +45,7 @@ export function CustomerWorkflow({requestId, onComplete}: {requestId: string; on
         const availability = result.availability.find(row => row.product_id === product.product_id);
         return <article className="product-card" key={product.product_id}><h3>{product.name}</h3>
           <p>AUD {product.price} · Availability: {availability?.status ?? "Not checked"}</p>
+          <p>{result.recommendations?.recommendations.find(row => row.product.product_id === product.product_id)?.explanation}</p>
           {availability && <p>{availability.reason} · Source updated: {availability.last_updated ?? "Unknown"}</p>}
         </article>;
       })}
