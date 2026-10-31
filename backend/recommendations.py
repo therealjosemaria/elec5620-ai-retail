@@ -11,6 +11,7 @@ import re
 from pydantic import Field
 
 from backend.models import CustomerRequest, DomainModel, Product, RequestStatus
+from backend.servings import MARKER, serving_note
 
 
 class RecommendationOutcome(StrEnum):
@@ -62,7 +63,9 @@ def _phrase(value: str) -> str:
 
 
 SUITABILITY_LIMITATION = (
-    "Occasion and party size were captured where stated, but catalogue data cannot assess their suitability."
+    "Occasion and party size were captured where stated. Missing group-suitability metadata "
+    "does not invalidate supported preference matches. Occasion suitability and the amount needed "
+    "for a group are not established. Package estimates use explicitly labelled prototype serving assumptions."
 )
 
 
@@ -96,6 +99,10 @@ def combined_preferences(request: CustomerRequest, result: RecommendationResult)
                 explanations.append(f'Your stated need "{need}" matches catalogue {facts}.')
                 evidence.append(need)
         else:
+            if request.party_size is not None:
+                # Revalidation of a cached result must not duplicate the note.
+                explanations = [text.split(MARKER, 1)[0].strip() for text in explanations]
+                explanations.append(serving_note(product))
             kept.append(recommendation.model_copy(update={
                 "matched_needs": evidence, "explanation": " ".join(explanations)}))
     captured_only = {request.occasion, str(request.party_size) if request.party_size is not None else None} - {None}
@@ -103,7 +110,8 @@ def combined_preferences(request: CustomerRequest, result: RecommendationResult)
                          for value in captured_only}
     limits = [line for line in result.limitations
               if not line.startswith("Catalogue has no occasion or party-size suitability")
-              and line not in captured_warnings]
+              and line not in captured_warnings
+              and line != "Occasion and party size were captured where stated, but catalogue data cannot assess their suitability."]
     if request.occasion is not None or request.party_size is not None:
         if SUITABILITY_LIMITATION not in limits:
             limits.append(SUITABILITY_LIMITATION)
@@ -112,7 +120,7 @@ def combined_preferences(request: CustomerRequest, result: RecommendationResult)
     outcome = result.outcome
     if outcome == RecommendationOutcome.COMPLETE and not kept:
         outcome = RecommendationOutcome.NO_MATCH
-    return result.model_copy(update={"recommendations": kept, "limitations": limits, "outcome": outcome})
+    return result.model_copy(update={"recommendations": kept, "limitations": list(dict.fromkeys(limits)), "outcome": outcome})
 
 
 def recommend_drinks(request: CustomerRequest,
@@ -164,5 +172,6 @@ def recommend_drinks(request: CustomerRequest,
         limitations.append(SUITABILITY_LIMITATION)
     if not results:
         limitations.append("No catalogue product satisfies all supported stated preferences and constraints.")
-    return RecommendationResult(outcome=RecommendationOutcome.COMPLETE if results else RecommendationOutcome.NO_MATCH,
-                                recommendations=results, limitations=limitations)
+    return combined_preferences(request, RecommendationResult(
+        outcome=RecommendationOutcome.COMPLETE if results else RecommendationOutcome.NO_MATCH,
+        recommendations=results, limitations=limitations))
