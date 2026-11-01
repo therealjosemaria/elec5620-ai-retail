@@ -37,7 +37,7 @@ export function CustomerWorkflow({requestId, onComplete}: {requestId: string; on
     <button type="button" onClick={run} disabled={busy}>{busy ? "Running agents…" : "Run agent workflow"}</button>
     {error && <p role="alert" className="error">{error}</p>}
     {result && <div aria-live="polite">
-      <section aria-label="Customer assistance summary">
+      <section className="workflow-summary" aria-label="Customer assistance summary">
         <h3>{products.length > 0
           ? result.outcome === "complete" ? `We found ${products.length} matching ${products.length === 1 ? "product" : "products"}` : "Product matches found — some checks remain unresolved"
           : result.outcome === "no_match" ? "No product matched the supported requirements" : "We could not complete your request"}</h3>
