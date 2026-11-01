@@ -32,8 +32,8 @@ test("All three workspaces expose honest integration states and preserve navigat
     await expect(page.getByRole("tabpanel").getByLabel("Operator token")).toBeVisible();
     await expect(page.getByRole("tabpanel").getByRole("status")).toHaveCount(0);
   }
-  await page.getByRole("tab", {name: /Availability/}).click();
-  await expect(page.getByRole("heading", {name: "Check product availability"})).toBeVisible();
+  await page.getByRole("tab", {name: /Check stock availability/}).click();
+  await expect(page.getByRole("heading", {name: "Check stock availability"})).toBeVisible();
   await page.getByRole("link", {name: "Business insights", exact: true}).click();
   await expect(page.getByRole("button", {name: "Review sample priorities"})).toBeVisible();
   await page.getByRole("tab", {name: /Profit margins/}).click();
