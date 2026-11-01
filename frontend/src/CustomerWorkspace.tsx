@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { DrinkRecommendations } from "./Member2";
 import { CustomerTools } from "./CustomerTools";
 import { CustomerWorkflow } from "./CustomerWorkflow";
+import { VoiceInput } from "./VoiceInput";
 
 type Status = {
   mode: "fixture" | "live"; live_attempts_today: number; local_daily_limit: number | null;
@@ -25,6 +26,7 @@ export function CustomerWorkspace() {
   const [text, setText] = useState("");
   const [saved, setSaved] = useState<Saved | null>(null);
   const [busy, setBusy] = useState(false);
+  const [listening, setListening] = useState(false);
   const [error, setError] = useState("");
   const [recommendationRefresh, setRecommendationRefresh] = useState(0);
   const [attempt, setAttempt] = useState<{text: string; id: string} | null>(null);
@@ -44,7 +46,7 @@ export function CustomerWorkspace() {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (busy) return;
+    if (busy || listening) return;
     setBusy(true); setError(""); setSaved(null);
     const current = attempt?.text === text ? attempt : {text, id: crypto.randomUUID()};
     setAttempt(current);
@@ -77,15 +79,16 @@ export function CustomerWorkspace() {
     <form onSubmit={submit}>
       <label htmlFor="needs">What are you looking for?</label>
       <textarea id="needs" maxLength={1500} rows={4} value={text}
-        onChange={e => setText(e.target.value)} disabled={busy} required
+        onChange={e => setText(e.target.value)} disabled={busy || listening} required
         placeholder="Describe your budget, occasion, preferences or constraints…" />
+      <VoiceInput value={text} onChange={setText} onListeningChange={setListening} disabled={busy} />
       <div className="actions">
-        <button type="button" className="secondary" disabled={!status || busy}
+        <button type="button" className="secondary" disabled={!status || busy || listening}
           onClick={() => setText(status!.sample)}>Use sample</button>
-        <button disabled={busy || !text.trim() || !status || (status.mode === "live" && !status.live_configured && status.selected_provider !== "local")}>
+        <button disabled={busy || listening || !text.trim() || !status || (status.mode === "live" && !status.live_configured && status.selected_provider !== "local")}>
           {busy ? "Capturing…" : "Capture and save"}
         </button>
-        <button type="button" className="secondary" disabled={busy} onClick={() => {
+        <button type="button" className="secondary" disabled={busy || listening} onClick={() => {
           setAttempt(null); setSaved(null); setText(""); setError("");
           sessionStorage.removeItem("captureAttempt"); localStorage.removeItem("lastRequestId");
         }}>Start a new request</button>
