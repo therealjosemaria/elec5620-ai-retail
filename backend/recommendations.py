@@ -138,7 +138,8 @@ def recommend_drinks(request: CustomerRequest,
     unsupported = [need for need in needs if _phrase(need) not in PHRASES]
     if unsupported:
         return RecommendationResult(outcome=RecommendationOutcome.UNSUPPORTED_REQUEST,
-                                    limitations=["Prototype matcher cannot safely interpret: " + "; ".join(unsupported)])
+                                    limitations=["The prototype cannot verify these stated requirements using its available catalogue rules: "
+                                                 + "; ".join(unsupported) + ". Please clarify or revise them; no unverified product is offered."])
     try:
         products = [Product.model_validate(p) for p in load_catalogue()]
         if len({p.product_id for p in products}) != len(products):

@@ -40,7 +40,9 @@ export function CustomerWorkflow({requestId, onComplete}: {requestId: string; on
       <section className="workflow-summary" aria-label="Customer assistance summary">
         <h3>{products.length > 0
           ? result.outcome === "complete" ? `We found ${products.length} matching ${products.length === 1 ? "product" : "products"}` : "Product matches found — some checks remain unresolved"
+          : result.outcome === "needs_clarification" ? "We need clarification about a stated requirement"
           : result.outcome === "no_match" ? "No product matched the supported requirements" : "We could not complete your request"}</h3>
+        {result.outcome === "needs_clarification" && <p>Your request was received, but a requirement could not be verified from the catalogue. Review the explanation below, then clarify or revise your request.</p>}
         {products.length > 0 && <p>These products match the preferences shown below. Review each product’s price, stock status and any explicitly stated party-size assumption.</p>}
         {result.budget && products.length > 0 && <p>Each listed product is within AUD {result.budget.budget} per package. This is not a combined order total.</p>}
         <p role="status">Workflow result: {result.outcome.replaceAll("_", " ")}</p>

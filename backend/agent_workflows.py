@@ -89,7 +89,8 @@ class CustomerAgent:
                 event(report, "workflow", "customer_agent", "recommend_drinks",
                       "cached" if result.cache_hit else "generated")
                 if result.outcome != "complete":
-                    report.outcome = "no_match" if result.outcome == "no_match" else "blocked"
+                    report.outcome = ("no_match" if result.outcome == "no_match" else
+                                      "needs_clarification" if result.outcome == "unsupported_request" else "blocked")
                 ids = [r.product.product_id for r in result.recommendations]
             except RecommendationError as exc:
                 report.outcome, ids = "blocked", []

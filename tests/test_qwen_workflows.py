@@ -243,14 +243,15 @@ def test_known_constraint_evidence_is_completed_from_validated_facts(system):
     assert "sweetness: dry" in result.recommendations[0].explanation
 
 
-def test_unknown_constraint_without_model_evidence_is_rejected(system):
+def test_unknown_constraint_without_model_evidence_is_reported_without_publishing_unverified_products(system):
     _, path, _ = system
     with sqlite3.connect(path) as db:
         products = load_products(db)
     raw = choices()
     request = CustomerRequest(taste_preferences=["red wine"], constraints=["no sweet drinks", "certified organic"], occasion="birthday party", party_size=6)
-    with pytest.raises(ValueError, match="constraint"):
-        validate_choices(json.dumps(raw), request, products)
+    result = validate_choices(json.dumps(raw), request, products)
+    assert result.outcome == "unsupported_request" and not result.recommendations
+    assert any('cannot verify your constraint "certified organic"' in line for line in result.limitations)
 
 
 def test_terminal_pending_marker_survives_restart_without_a_call(system):

@@ -46,7 +46,7 @@ export function DrinkRecommendations({ requestId, refresh = 0, onComplete }: { r
     <button type="button" onClick={run} disabled={busy}>{busy ? "Matching…" : "Recommend drinks"}</button>
     {error && <p role="alert" className="error">{error}</p>}
     {result && <div aria-live="polite">
-      <p role="status">Recommendation result: {result.outcome.replaceAll("_", " ")}</p>
+      <p role="status">Recommendation result: {result.outcome === "unsupported_request" ? "needs clarification" : result.outcome.replaceAll("_", " ")}</p>
       <p>Data: {result.mode} · Method: {result.method.replaceAll("_", " ")} · {result.cache_hit ? "Reused from SQLite" : "Generated and saved"}</p>
       <p>Provider: {result.model_provider}{result.model_name ? ` · ${result.model_name}` : ""}{result.fallback_reason ? ` · ${result.fallback_reason.replaceAll("_", " ")}` : ""}</p>
       <small>Saved: {result.created_at}</small>
