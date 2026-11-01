@@ -18,9 +18,13 @@
 .stock-choice { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; }
 .stock-choice small { display: block; color: var(--muted); }
 .stock-form > button { justify-self: start; }
+.workflow-summary { margin-top: 24px; }
+.result .workflow-summary p { font-size: 13px; color: #79816c; }
+.result .workflow-summary [role=status] { font-size: 12px; color: #4f6540; }
 .stock-results table { min-width: 800px; }
 .stock-results td { white-space: nowrap; }
 @media (max-width: 760px) {
+  .result .workflow-summary p { font-size: 12px; }
   .site-header nav { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; overflow: visible; }
   .site-header nav a { font-size: 11px; }
 }
