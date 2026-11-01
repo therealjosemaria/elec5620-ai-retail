@@ -119,14 +119,20 @@ export function VoiceInput({value, onChange, onListeningChange, disabled}: {
   }
 
   return <div className="voice-input">
-    <button type="button" className="secondary" onClick={toggle}
+    <button type="button" className="voice-button" onClick={toggle}
       aria-pressed={listening} aria-controls="needs" aria-describedby="voice-help"
       disabled={disabled || !supported || (!listening && value.length >= 1500)}>
-      {listening ? "Stop listening" : "Speak request"}
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {listening ? <rect x="6" y="6" width="12" height="12" rx="1" /> : <>
+          <rect x="8" y="2" width="8" height="13" rx="4" />
+          <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8" />
+        </>}
+      </svg>
+      <span>{listening ? "Stop listening" : "Speak request"}</span>
     </button>
     <small id="voice-help">{!supported
       ? "Dictation is unavailable in this browser. You can still type your request."
-      : "Australian English dictation. Your browser’s speech service may process audio online. Text is not submitted until you choose Capture and save."}</small>
+      : "Optional · English (AU). Audio may be processed by your browser’s speech service."}</small>
     {message && <p role="status" className="voice-status">{message}</p>}
   </div>;
 }
