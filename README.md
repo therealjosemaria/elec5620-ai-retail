@@ -7,6 +7,12 @@ frontend. PR #5 adds saved Qwen recommendations, LangGraph handoffs and optional
 local Qwen fallback. University usage has no application daily cap; local Qwen
 handles service unavailability. See the [full UC/contribution status and joint test walkthrough](docs/team-status.md).
 
+## AI Use Acknowledgement
+
+The group's use of generative AI tools and the associated human review
+and verification responsibilities are documented in
+[AI_ACKNOWLEDGEMENT.md](AI_ACKNOWLEDGEMENT.md).
+
 This guide covers first setup, seeing React, daily development, live-model access,
 tests and the team Git workflow. Start with fixture mode; no API key or VPN is
 needed for the sample demonstration.
