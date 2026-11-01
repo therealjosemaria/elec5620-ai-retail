@@ -47,6 +47,9 @@ def live_recommend(request: CustomerRequest, products: list[Product], *, provide
         "Each product must satisfy the combined stated preferences and all constraints, not just one need. "
         "For red wine and sweet, dry reds and sweet whites are not suitable matches. "
         "Provide evidence for every taste preference and constraint on each product. "
+        "Never ignore an exclusion. If a hard constraint cannot be verified from supplied catalogue "
+        "facts, list its exact wording in unresolved_needs and do not recommend an unverified product. "
+        "Absence of a word from a product name is not proof of ingredient or grape composition. "
         "If no supplied product satisfies them together return an empty recommendations list; do not offer alternatives. "
         "Do not filter by budget, check availability, infer serving quantities, or make purchasing decisions. "
         "Return at most three recommendations. Rank supported matches; equal evidence may share a rank. Each recommendation needs at least one "
@@ -81,6 +84,7 @@ def validate_choices(raw: str, request: CustomerRequest, products: list[Product]
     unresolved = [value for value in choices.unresolved_needs if value in all_needs]
     withheld_references = len(unresolved) != len(choices.unresolved_needs)
     ids, previous_rank, results = set(), 0, []
+    unsupported_constraints: set[str] = set()
     for choice in choices.recommendations:
         if choice.product_id not in catalogue or choice.product_id in ids:
             raise GroundingError("Unknown or duplicate recommended product.")
@@ -104,10 +108,11 @@ def validate_choices(raw: str, request: CustomerRequest, products: list[Product]
         supported_constraints = {m.need_value for m in choice.matches if m.need_field == "constraints"}
         # Retain the existing exact checks for recognised hard constraints.
         # Qwen supplies broader interpretation; it cannot override known facts.
+        missing_constraints = []
         for constraint in request.constraints:
             predicates = PHRASES.get(_phrase(constraint), ())
             if not predicates and constraint not in supported_constraints:
-                raise GroundingError("A stated constraint has no supporting catalogue evidence.")
+                missing_constraints.append(constraint)
             for field, value in predicates:
                 actual = getattr(product, field)
                 facts = {v.casefold() for v in actual} if isinstance(actual, list) else {str(actual).casefold()}
@@ -116,6 +121,9 @@ def validate_choices(raw: str, request: CustomerRequest, products: list[Product]
                 if constraint not in supported_constraints:
                     explanations.append(f'Your stated constraint "{constraint}" matches catalogue {field.replace("_", " ")}: {value}.')
                     matched.append(constraint)
+        if missing_constraints:
+            unsupported_constraints.update(missing_constraints)
+            continue
         results.append(DrinkRecommendation(product=product, rank=choice.rank,
             matched_needs=list(dict.fromkeys(matched)), explanation=" ".join(dict.fromkeys(explanations))))
     limits = ["Budget and current availability have not been checked.",
@@ -126,6 +134,18 @@ def validate_choices(raw: str, request: CustomerRequest, products: list[Product]
         limits.append("Some uncertainty could not be linked to your stated needs and was not used.")
     limits.extend(f'Catalogue evidence did not resolve the stated need: "{value}".'
                   for value in dict.fromkeys(unresolved))
+    if not results:
+        unsupported_constraints.update(value for value in unresolved if value in request.constraints)
+    if unsupported_constraints:
+        if results:
+            limits.append("Some proposed products were withheld because they lacked evidence for every stated constraint.")
+        else:
+            limits.extend(f'We cannot verify your constraint "{constraint}" from the available catalogue evidence. '
+                          "It has not been ignored; no unverified product is offered. Please clarify or revise the constraint, "
+                          "or ask the operator to verify the catalogue details."
+                          for constraint in sorted(unsupported_constraints))
+    outcome = (RecommendationOutcome.COMPLETE if results else
+               RecommendationOutcome.UNSUPPORTED_REQUEST if unsupported_constraints else RecommendationOutcome.NO_MATCH)
     return combined_preferences(request, RecommendationResult(
-        outcome=RecommendationOutcome.COMPLETE if results else RecommendationOutcome.NO_MATCH,
+        outcome=outcome,
         recommendations=results, limitations=limits, method="campus_qwen_catalogue_recommendation"))
