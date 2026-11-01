@@ -20,11 +20,11 @@ test("Customer capture → recommendations → budget → availability", async (
 
 test("Operator availability → connected priorities → profit coverage", async ({page}) => {
   await page.goto("/#inventory");
-  await page.getByRole("tab", {name: /Availability/}).click();
+  await page.getByRole("tab", {name: /Check stock availability/}).click();
   await page.getByLabel("Operator token", {exact: true}).fill("fixture-test-operator");
   await page.getByLabel(/Moscato 750ml/).check();
   await page.getByLabel(/Pale Ale 6-pack/).check();
-  await page.getByRole("button", {name: "Check selected availability"}).click();
+  await page.getByRole("button", {name: "Check selected products' availability"}).click();
   await expect(page.getByRole("heading", {name: "Availability results"})).toBeVisible();
   await expect(page.locator("#inventory-panel tbody")).toContainText("Unavailable");
   await expect(page.locator("#inventory-panel tbody")).toContainText("Unknown");

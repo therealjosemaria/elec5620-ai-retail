@@ -8,7 +8,7 @@ import { InventoryDecisions, DemandTrends } from "./RemainingTools";
 const inventoryFeatures = [
   {title: "Stock lookup", member: "M1", id: "UC-M1-02", description: "Current stock quantities and source update times for selected products.", dependency: "The inventory query service is not connected."},
   {title: "Low-stock alerts", member: "M3", id: "UC-M3-01", description: "Products at or below their configured stock threshold, with supporting evidence.", dependency: "Current stock and threshold data are required before alerts can be generated."},
-  {title: "Availability", member: "M4", id: "UC-M4-02", description: "Available, unavailable or unknown status based on verified current inventory.", dependency: "Product availability cannot be confirmed until the inventory service is connected."},
+  {title: "Check stock availability", member: "M4", id: "UC-M4-02", description: "Available, unavailable or unknown status based on verified current inventory.", dependency: "Product availability cannot be confirmed until the inventory service is connected."},
   {title: "Reorder suggestions", member: "M5", id: "UC-M5-01", description: "Suggested replenishment quantities with the inventory evidence and rule used.", dependency: "Current stock, thresholds and the team's reorder rule are required."},
 ];
 

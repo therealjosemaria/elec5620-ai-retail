@@ -33,7 +33,7 @@ export function StockLookup({ products, error, availability = false }: {products
   }
 
   return <section aria-labelledby="stock-title" className="inventory-list">
-    <h3 id="stock-title">{availability ? "Check product availability" : "Check current stock"}</h3>
+    <h3 id="stock-title">{availability ? "Check stock availability" : "Check current stock"}</h3>
     <p>Prototype inventory snapshot. Quantities are sample data; source timestamps are preserved and stale records stay labelled.</p>
     <form onSubmit={lookup} className="stock-form">
       <label htmlFor="operator-token">Operator token</label>
@@ -50,7 +50,7 @@ export function StockLookup({ products, error, availability = false }: {products
             }}/><span>{p.name} <small>{p.product_id}</small></span>
         </label>)}
       </fieldset>}
-      <button type="submit" disabled={busy || !products.length}>{busy ? "Checking…" : availability ? "Check selected availability" : "Check selected stock"}</button>
+      <button type="submit" disabled={busy || !products.length}>{busy ? "Checking…" : availability ? "Check selected products' availability" : "Check selected stock"}</button>
     </form>
     {failure && <p role="alert" className="error">{failure}</p>}
     {results && <div aria-live="polite"><h3>{availability ? "Availability results" : "Stock lookup results"}</h3>
